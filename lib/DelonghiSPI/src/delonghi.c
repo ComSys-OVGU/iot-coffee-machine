@@ -16,6 +16,8 @@ int state = -1;
 SPI_HandleTypeDef *DL_SPI_Handle;
 void DL_Init(SPI_HandleTypeDef *spi_handle) {
     DL_SPI_Handle = spi_handle;
+
+    printf("[Delonghi] Init'd\n");
 }
 
 void DL_Sync(void) {
@@ -57,6 +59,8 @@ void DL_Sync(void) {
   BSP_LED_Off(LED6);
   BSP_LED_Off(LED3);
   state = 1; // synced
+
+  printf("[Delonghi] Sync'd\n");
 }
 
 static uint8_t checksum(uint8_t* packet) {
@@ -104,6 +108,7 @@ while (1) {
   }
 }
 
+int lastBtn = 0;
 void DL_TransferCompletedCB(void) {
     // not synced yet, exit
     if(state < 2) {
@@ -114,29 +119,84 @@ void DL_TransferCompletedCB(void) {
     }
 
     int update = 0;
-    if(aRxBuffer[1] == 0x01) {
+    uint8_t btn = aRxBuffer[1];
+    if(btn == 0x01) {
         // PWR BTN
-        aTxBuffer[1] = 0x00;
-        aTxBuffer[2] = 0x00;
-        aTxBuffer[3] = 0x00;
-        
+
+        int i;
+        for(i = 1; i < DL_PACKETSIZE - 1; i++) {
+            aTxBuffer[i] = 0x00;
+        }
+
         update = 1;
-    } else if(aRxBuffer[1] == 0x20) {
+    } else if(lastBtn != 0 && (btn == 0x04 || btn == 0x08 || btn == 0x10 || btn == 0x20 || btn == 0x40 || btn == 0x80 || aRxBuffer[2] == 0x21)) {
+        // repeated press, ignore
+        if(lastBtn++ >= 10) {
+            lastBtn = 0;
+        }
+    } else if(btn == 0x04) {
+        // P btn
         aTxBuffer[1] = (aTxBuffer[1] + 0x01) & 0xFF;
         
         update = 1;
-    } else if(aRxBuffer[1] == 0x40) {
+    
+    } else if(btn == 0x08) {
+        // flush_water btn
         aTxBuffer[2] = (aTxBuffer[2] + 0x01) & 0xFF;
         
         update = 1;
-    } else if(aRxBuffer[1] == 0x80) {
+    
+    } else if(btn == 0x10) {
+        // hot_water btn
         aTxBuffer[3] = (aTxBuffer[3] + 0x01) & 0xFF;
         
         update = 1;
+    
+    } else if(btn == 0x20) {
+        // OK btn
+        aTxBuffer[4] = (aTxBuffer[4] + 0x01) & 0xFF;
+        
+        update = 1;
+    } else if(btn == 0x40) {
+        // one cup small
+        aTxBuffer[5] = (aTxBuffer[5] + 0x01) & 0xFF;
+        
+        update = 1;
+    } else if(btn == 0x80) {
+        // two cups small
+        aTxBuffer[6] = (aTxBuffer[6] + 0x01) & 0xFF;
+        
+        update = 1;
+    } else if(aRxBuffer[2] == 0x21) {
+        // two cups small
+        aTxBuffer[7] = (aTxBuffer[7] + 0x01) & 0xFF;
+        
+        update = 1;
+    } else {
+        // reset
+        lastBtn = 0;
     }
 
     if(update == 1) {
         // update the checksum before sending
         aTxBuffer[8] = checksum(aTxBuffer);
+
+        lastBtn = 1;
     }
+
+
+    if(1) {
+    // output the rx and tx buffers:
+    printf("[Delonghi] rcvd: ");
+
+    int i;
+    for(i = 0; i < DL_PACKETSIZE; i++) {
+        printf("%02X", aRxBuffer[i]);
+    }
+    printf("  ");
+    for(i = 0; i < DL_PACKETSIZE; i++) {
+        printf("%02X", aTxBuffer[i]);
+    }
+    printf("\n");
+}
 }
