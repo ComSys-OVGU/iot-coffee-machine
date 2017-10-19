@@ -1,25 +1,34 @@
-#include "main.h"
+#include "delonghi.h"
+#include "../../STM32F4-Discovery/src/stm32f4_discovery.h"
+
+extern void _Error_Handler(char *, int);
+#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 
 /* Buffer used for transmission */
 // uint8_t aTxBuffer[] = {0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 uint8_t aTxBuffer[] = {0x0B, 0x07, 0x00, 0x28, 0x0F, 0x20, 0x04, 0x00, 0xC2};
 
 /* Buffer used for reception */
-uint8_t aRxBuffer[BUFFERSIZE];
+uint8_t aRxBuffer[DL_PACKETSIZE];
 
 int state = -1;
+
+SPI_HandleTypeDef *DL_SPI_Handle;
+void DL_Init(SPI_HandleTypeDef *spi_handle) {
+    DL_SPI_Handle = spi_handle;
+}
 
 void DL_Sync(void) {
     state = 0; // starting to sync
     // first, sync to the 0xB0 Byte
   while (1) {
     // wait for one byte
-    if(HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t*)aTxBuffer, (uint8_t *)aRxBuffer, 1) != HAL_OK)
+    if(HAL_SPI_TransmitReceive_DMA(DL_SPI_Handle, (uint8_t*)aTxBuffer, (uint8_t *)aRxBuffer, 1) != HAL_OK)
     {
       /* Transfer error in transmission process */
       Error_Handler();
     }
-    while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+    while (HAL_SPI_GetState(DL_SPI_Handle) != HAL_SPI_STATE_READY)
     {
     }
 
@@ -29,12 +38,12 @@ void DL_Sync(void) {
       
       // wait for 8 other bytes, then exit
       // wait for one byte
-      if(HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t*)aTxBuffer, (uint8_t *)aRxBuffer, 8) != HAL_OK)
+      if(HAL_SPI_TransmitReceive_DMA(DL_SPI_Handle, (uint8_t*)aTxBuffer, (uint8_t *)aRxBuffer, 8) != HAL_OK)
       {
         /* Transfer error in transmission process */
         Error_Handler();
       }
-      while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+      while (HAL_SPI_GetState(DL_SPI_Handle) != HAL_SPI_STATE_READY)
       {
       }
       
@@ -72,7 +81,7 @@ void DL_Start(void) {
 while (1) {
     BSP_LED_Toggle(LED4);
 
-    if(HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t*)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE) != HAL_OK)
+    if(HAL_SPI_TransmitReceive_DMA(DL_SPI_Handle, (uint8_t*)aTxBuffer, (uint8_t *)aRxBuffer, DL_PACKETSIZE) != HAL_OK)
     {
       /* Transfer error in transmission process */
       Error_Handler();
@@ -85,7 +94,7 @@ while (1) {
         For simplicity reasons, this example is just waiting till the end of the 
         transfer, but application may perform other tasks while transfer operation
         is ongoing. */  
-    while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+    while (HAL_SPI_GetState(DL_SPI_Handle) != HAL_SPI_STATE_READY)
     {
     }
 
@@ -101,8 +110,6 @@ void DL_TransferCompletedCB(void) {
         return;
     }
     if(!checksumOK(aRxBuffer)) {
-        char* dbg = sprintf("packet: 0x%02X, calc: 0x%02X", aRxBuffer[8], checksum(aRxBuffer));
-        printf(dbg);
         Error_Handler();
     }
 

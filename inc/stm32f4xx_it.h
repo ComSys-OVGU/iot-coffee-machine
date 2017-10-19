@@ -1,14 +1,10 @@
 /**
   ******************************************************************************
-  * @file    SPI/SPI_FullDuplex_ComDMA/Inc/stm32f4xx_it.h 
-  * @author  MCD Application Team
-  * @version V1.2.7
-  * @date    17-February-2017
+  * @file    stm32f4xx_it.h
   * @brief   This file contains the headers of the interrupt handlers.
   ******************************************************************************
-  * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
+  * COPYRIGHT(c) 2017 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -44,24 +40,19 @@
 #endif 
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h" 
+#include "stm32f4xx_hal.h"
+#include "main.h"
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 
-void NMI_Handler(void);
-void HardFault_Handler(void);
-void MemManage_Handler(void);
-void BusFault_Handler(void);
-void UsageFault_Handler(void);
 void SVC_Handler(void);
-void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
-void SPIx_DMA_RX_IRQHandler(void);
-void SPIx_DMA_TX_IRQHandler(void);
-void SPIx_IRQHandler(void);
+void DMA1_Stream3_IRQHandler(void);
+void DMA1_Stream4_IRQHandler(void);
+void SPI2_IRQHandler(void);
 
 #ifdef __cplusplus
 }
