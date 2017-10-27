@@ -1,5 +1,8 @@
+.pioenvs
+.piolibdeps
+.vscode/c_cpp_properties.json
 
-# Created by https://www.gitignore.io/api/osx
+# Created by https://www.gitignore.io/api/osx,visualstudiocode
 
 ### OSX ###
 *.DS_Store
@@ -28,4 +31,12 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-# End of https://www.gitignore.io/api/osx
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history
+
+# End of https://www.gitignore.io/api/osx,visualstudiocode
