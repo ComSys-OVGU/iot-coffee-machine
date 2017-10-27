@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "await-fs": "^1.0.0",
+    "csv-parse": "^1.2.4"
+  }
+}
