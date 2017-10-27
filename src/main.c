@@ -430,10 +430,6 @@ int _write(int file, char *data, int len)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	__HAL_UART_FLUSH_DRREGISTER(&huart2); // Clear the buffer to prevent overrun
-
-	int i = 0;
-
-  printf("%c", uartRxBuffer); // Echo the inputed character
   
 }
 /* USER CODE END 4 */
