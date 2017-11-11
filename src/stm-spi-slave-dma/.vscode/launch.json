@@ -6,7 +6,7 @@
             "request": "launch",
             "cwd": "${workspaceRoot}",
             "name": "PlatformIO Debugger",
-            "target": "/Volumes/Coffee/iot-coffee-machine/stm-spi-slave-dma/.pioenvs/disco_f407vg/firmware.elf",
+            "target": "/Volumes/Coffee/iot-coffee-machine/src/stm-spi-slave-dma/.pioenvs/disco_f407vg/firmware.elf",
             "gdbpath": "/Users/fabian/.platformio/penv/bin/piodebuggdb",
             "autorun": [ "source .pioinit" ]
         }
