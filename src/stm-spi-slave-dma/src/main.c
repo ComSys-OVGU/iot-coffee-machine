@@ -124,7 +124,7 @@ int main(void)
   HAL_Delay(10);
 
   BSP_LED_Toggle(LED3);
-  DL_Init(&hspi2);
+  DL_Init(&hspi1, &hspi2);
   DL_Sync();
   DL_Start();
   /* USER CODE END 2 */
@@ -210,7 +210,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -388,7 +388,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {
-  DL_TransferCompletedCB();
+  DL_TransferCompletedCB(hspi);
 }
 
 // redirect printf to uart
