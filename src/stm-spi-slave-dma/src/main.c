@@ -424,7 +424,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 void _Error_Handler(char * file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  BSP_LED_On(LED5);
+  BSP_LED_On(LED_Red);
   /* User can add his own implementation to report the HAL error return state */
   while(1) 
   {

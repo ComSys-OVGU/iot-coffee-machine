@@ -198,7 +198,7 @@ void DL_Sync_LCD(void) {
     _DL_DMA_wait(DL_SPI_Handle_LCD);
 
     if (DL_RxBuffer_LCD[0] == DL_PACKET_LCD_START) {
-      BSP_LED_Toggle(LED3);
+      BSP_LED_Toggle(LED_Orange);
       // we found it, great!
 
       // wait for 8 other bytes, then exit
@@ -208,15 +208,15 @@ void DL_Sync_LCD(void) {
       }
       _DL_DMA_wait(DL_SPI_Handle_LCD);
 
-      BSP_LED_Toggle(LED3);
+      BSP_LED_Toggle(LED_Orange);
       break;
     } else {
       // toggle blue led to indicate waiting status
-      BSP_LED_Toggle(LED6);
+      BSP_LED_Toggle(LED_Blue);
     }
   }
-  BSP_LED_Off(LED6);
-  BSP_LED_Off(LED3);
+  BSP_LED_Off(LED_Blue);
+  BSP_LED_Off(LED_Orange);
   state = Synced_LCD; // synced
 
   printf("[Delonghi] Sync'd with LCD\n");
@@ -236,18 +236,18 @@ void DL_Sync_PB(void) {
     _DL_DMA_wait(DL_SPI_Handle_PB);
 
     if (DL_RxBuffer_PB[0] == DL_PACKET_PB_START) {
-      BSP_LED_Toggle(LED3);
+      BSP_LED_Toggle(LED_Orange);
       // we found it, great!
       //  the PB does not need to send a whole packet to be in sync, 
       //  as we are the master and we control the clock
       break;
     } else {
       // toggle blue led to indicate waiting status
-      BSP_LED_Toggle(LED6);
+      BSP_LED_Toggle(LED_Blue);
     }
   }
-  BSP_LED_Off(LED6);
-  BSP_LED_Off(LED3);
+  BSP_LED_Off(LED_Blue);
+  BSP_LED_Off(LED_Orange);
   state = Synced_PB; // synced
 
   printf("[Delonghi] Sync'd with PB: ");
@@ -259,9 +259,10 @@ void DL_Sync(void) {
   DL_Sync_PB();
 
   // debug: only communicate with PB
-  while (0) {
+  const uint8_t PB_ONLY = 0;
+  while (PB_ONLY) {
     HAL_Delay(250);
-    BSP_LED_Toggle(LED4);
+    BSP_LED_Toggle(LED_Green);
 
     if (_DL_DMA_Transfer(DL_SPI_Handle_PB, (uint8_t * ) DL_TxBuffer_PB, (uint8_t * ) DL_RxBuffer_PB, DL_PACKETSIZE, PB) != HAL_OK) {
       /* Transfer error in transmission process */
@@ -276,7 +277,7 @@ void DL_Sync(void) {
     printf(" (CS=%s)\n", (checksumOK(DL_RxBuffer_PB)?"OK":"NOK"));
   }
 
-  while (0) { /*block*/ }
+  while (PB_ONLY) { /*block*/ }
 
   DL_Sync_LCD();
 }
@@ -425,7 +426,7 @@ void DL_Test_Btn() {
 
 int lastBtn = 0;
 void _DL_Debug_LCD(void) {
-  // BSP_LED_Off(LED5);
+  // BSP_LED_Off(LED_Red);
 
   // seems we've received a valid package
   // now to rev-eng the whole LCD we provide a debug mode
