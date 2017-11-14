@@ -44,6 +44,7 @@ uint8_t DL_TxBuffer_LCD[] = {
   0xC2
 };
 
+uint8_t test_btnOverride = 0x00;
 
 /* Buffers used for reception */
 uint8_t DL_RxBuffer_PB[DL_PACKETSIZE];

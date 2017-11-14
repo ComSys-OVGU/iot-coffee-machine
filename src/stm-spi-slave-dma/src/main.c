@@ -123,7 +123,9 @@ int main(void)
   printf("Waiting...\n\n");
   HAL_Delay(10);
 
-  // BSP_LED_Toggle(LED3);
+  //BSP_LED_Toggle(LED3);
+  BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_EXTI);
+
   DL_Init(&hspi1, &hspi2);
   DL_Sync();
   DL_Start();
@@ -413,6 +415,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	__HAL_UART_FLUSH_DRREGISTER(&huart2); // Clear the buffer to prevent overrun
   
+}
+
+void EXTI0_IRQHandler(void) {
+  printf("[Main] Key Button was pressed\n");
+  BSP_LED_Toggle(LED_Blue);
+
+  DL_Test_Btn();
+
+  /* Clear the User Button EXTI line pending bit */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
 }
 /* USER CODE END 4 */
 

@@ -27,5 +27,6 @@ void DL_Init(SPI_HandleTypeDef * spi_handle_pb, SPI_HandleTypeDef * spi_handle_l
 void DL_Sync(void);
 void DL_Start(void);
 void DL_TransferCompletedCB(SPI_HandleTypeDef * spi_handle);
+void DL_Test_Btn(void);
 
 #endif /* __DELONGHI_H */
