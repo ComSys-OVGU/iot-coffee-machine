@@ -123,7 +123,7 @@ int main(void)
   printf("Waiting...\n\n");
   HAL_Delay(10);
 
-  BSP_LED_Toggle(LED3);
+  // BSP_LED_Toggle(LED3);
   DL_Init(&hspi1, &hspi2);
   DL_Sync();
   DL_Start();
