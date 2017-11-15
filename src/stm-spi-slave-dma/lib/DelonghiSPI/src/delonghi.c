@@ -238,6 +238,7 @@ void _DL_Sync_LCD(void) {
 }
 
 void _DL_Sync_PB(void) {
+  uint8_t cnt = 0;
   // first, sync to the 0xB0 Byte
   while (1) {
     // wait for one byte
@@ -260,6 +261,13 @@ void _DL_Sync_PB(void) {
       // BSP_LED_Toggle(LED_Blue);
       // only wait in case we did not exit before
       HAL_Delay(1);
+      
+      if(cnt++ >= 100) {
+        // we've waited 100 times now, it seems the PB is either off or NC
+        //  this mitigates a PB that is in deep-sleep
+        printf("[Delonghi] Cannot sync with PB, assuming it'll come one");
+        return;
+      }
     }
 
   }
