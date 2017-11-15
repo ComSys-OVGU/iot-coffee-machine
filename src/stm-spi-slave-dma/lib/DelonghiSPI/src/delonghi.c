@@ -45,6 +45,7 @@ uint8_t DL_TxBuffer_LCD[] = {
 };
 
 uint8_t test_btnOverride = 0x00;
+uint8_t test_btnCnt = 0;
 
 /* Buffers used for reception */
 uint8_t DL_RxBuffer_PB[DL_PACKETSIZE];
@@ -436,7 +437,21 @@ void DL_Start(void) {
 
       break;
 
-    case Communicate_PB:    // 9
+    case Communicate_PB: // 9
+
+      // apply the button mask
+      if (test_btnOverride != 0) {
+        DL_TxBuffer_PB[1] = 0x20 & 0xFF;
+        DL_TxBuffer_PB[7] = 0x01 & 0xFF;
+        DL_TxBuffer_PB[8] = checksum(DL_TxBuffer_PB);
+        if (test_btnCnt++ >= 6) {
+          test_btnOverride = 0;
+          test_btnCnt = 0;
+        }
+      }
+
+      // make sure we don't re-use the old buffer
+      cpyPacket(DL_Buffer_Sync, DL_RxBuffer_PB);
       // send the current LCD-state to the PB and store the received PB-state
       if (_DL_DMA_Transfer(DL_SPI_Handle_PB, (uint8_t *)DL_TxBuffer_PB, (uint8_t *)DL_RxBuffer_PB, DL_PACKETSIZE, PB) != HAL_OK)
       {
@@ -529,7 +544,7 @@ void DL_Error_Handler(char * message) {
 void DL_Test_Btn() {
   // a button was pressed so emulate a device button
 
-  printf("[Delonghi] Emulating OK Button");
+  printf("[Delonghi] Emulating OK Button\n");
   test_btnOverride = DL_LCD_BTN_OK;
 }
 
