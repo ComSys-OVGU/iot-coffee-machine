@@ -123,7 +123,7 @@ int main(void)
   printf("Waiting...\n\n");
   HAL_Delay(10);
 
-  BSP_LED_Toggle(LED3);
+  // BSP_LED_Toggle(LED3);
   DL_Init(&hspi1, &hspi2);
   DL_Sync();
   DL_Start();
@@ -250,7 +250,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 230400;
+  huart2.Init.BaudRate = 921600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;

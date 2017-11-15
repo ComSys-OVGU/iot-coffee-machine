@@ -64,11 +64,16 @@ typedef enum {
   Synced_LCD,
 
   Idle, // 5
-  Communicating_LCD, // 6
-  Communicated_LCD, // 7
 
+  Communicate_LCD, 
+  Communicating_LCD,
+  Communicated_LCD,
+
+  Communicate_PB,
   Communicating_PB,
-  Communicated_PB
+  Communicated_PB,
+
+  DBG_Halt
 } DL_State;
 
 DL_State state = Unknown;
@@ -129,9 +134,11 @@ void _DL_DMA_wait(SPI_HandleTypeDef * spi_handle) {
       For simplicity reasons, this example is just waiting till the end of the
       transfer, but application may perform other tasks while transfer operation
       is ongoing. */
+  BSP_LED_On(LED_Orange);
   while (HAL_SPI_GetState(spi_handle) != HAL_SPI_STATE_READY) {
     // wait for DMA to signal that the transaction finished
   }
+  BSP_LED_Off(LED_Orange);
 }
 
 typedef enum { 
@@ -188,7 +195,7 @@ HAL_StatusTypeDef _DL_DMA_Transfer(SPI_HandleTypeDef * spi_handle, uint8_t *pTxD
   return HAL_ERROR;
 }
 
-void DL_Sync_LCD(void) {
+void _DL_Sync_LCD(void) {
   state = Syncing_LCD; // starting to sync
 
   // first, sync to the 0xB0 Byte
@@ -206,14 +213,18 @@ void DL_Sync_LCD(void) {
       // we found it, great!
 
       // wait for 8 other bytes, then exit
-      if (HAL_SPI_TransmitReceive_DMA(DL_SPI_Handle_LCD, (uint8_t * ) DL_Buffer_Sync, (uint8_t * ) DL_RxBuffer_LCD, DL_PACKETSIZE - 1) != HAL_OK) {
+      if (HAL_SPI_TransmitReceive_DMA(DL_SPI_Handle_LCD, (uint8_t * ) DL_Buffer_Sync, (uint8_t * ) DL_RxBuffer_LCD + 1, DL_PACKETSIZE - 1) != HAL_OK) {
         /* Transfer error in transmission process */
         DL_Error_Handler("Error while syncing with LCD (could not receive remaining 8 bytes)");
       }
       _DL_DMA_wait(DL_SPI_Handle_LCD);
 
-      BSP_LED_Toggle(LED_Orange);
-      break;
+      if(checksumOK(DL_RxBuffer_LCD)) {
+        BSP_LED_Toggle(LED_Orange);
+        break;
+      } else {
+        printf("[Delonghi] Invalid cs in sync with LCD, trying again...");
+      }
     } else {
       // toggle blue led to indicate waiting status
       BSP_LED_Toggle(LED_Blue);
@@ -226,14 +237,11 @@ void DL_Sync_LCD(void) {
   printf("[Delonghi] Sync'd with LCD\n");
 }
 
-void DL_Sync_PB(void) {
-  state = Syncing_PB; // starting to sync
-
+void _DL_Sync_PB(void) {
   // first, sync to the 0xB0 Byte
   while (1) {
     // wait for one byte
     printf("[Delonghi] Sync_PB: Waiting for 1 byte\n");
-    HAL_Delay(100);
     if (_DL_DMA_Transfer(DL_SPI_Handle_PB, (uint8_t *)DL_Buffer_Sync, (uint8_t *)DL_RxBuffer_PB, 1, Sync_First) != HAL_OK)
     {
       /* Transfer error in transmission process */
@@ -242,19 +250,21 @@ void DL_Sync_PB(void) {
     _DL_DMA_wait(DL_SPI_Handle_PB);
 
     if (DL_RxBuffer_PB[0] == DL_PACKET_PB_START) {
-      BSP_LED_Toggle(LED_Orange);
+      // BSP_LED_Toggle(LED_Orange);
       // we found it, great!
       //  the PB does not need to send a whole packet to be in sync, 
       //  as we are the master and we control the clock
       break;
     } else {
       // toggle blue led to indicate waiting status
-      BSP_LED_Toggle(LED_Blue);
+      // BSP_LED_Toggle(LED_Blue);
+      // only wait in case we did not exit before
+      HAL_Delay(1);
     }
+
   }
-  BSP_LED_Off(LED_Blue);
-  BSP_LED_Off(LED_Orange);
-  state = Synced_PB; // synced
+  // BSP_LED_Off(LED_Blue);
+  // BSP_LED_Off(LED_Orange);
 
   printf("[Delonghi] Sync'd with PB: ");
   _dump_packet_size(DL_RxBuffer_PB, 1);
@@ -262,10 +272,13 @@ void DL_Sync_PB(void) {
 }
 
 void DL_Sync(void) {
-  DL_Sync_PB();
-
   // debug: only communicate with PB
   const uint8_t PB_ONLY = 0;
+
+  if (PB_ONLY) {
+    _DL_Sync_PB();
+  }
+
   while (PB_ONLY) {
     HAL_Delay(250);
     BSP_LED_Toggle(LED_Green);
@@ -284,47 +297,105 @@ void DL_Sync(void) {
   }
 
   while (PB_ONLY) { /*block*/ }
-
-  DL_Sync_LCD();
 }
 
 void DL_Start(void) {
   // note: this is busy-waiting for DMA transfers
   // and it might be better to handle this via callbacks
 
-  state = Idle;
+  // this should be enough to trigger on
+  BSP_LED_Off(LED_Red);
+  BSP_LED_On(LED_Red);
+  BSP_LED_Off(LED_Red);
+
+  BSP_LED_Off(LED_Green);
+  BSP_LED_Off(LED_Orange);
+  BSP_LED_Off(LED_Blue);
 
   while (1) {
     // printf("[Delonghi] Running State %d\n", state);
-
+    BSP_LED_Toggle(LED_Blue);
 
     switch (state) {
+    case Inited:            // 0
+      // first, sync to the PB
+      state = Syncing_PB;
+      break;
+
+    case Syncing_PB:        // 1
+      // note that this is blocking and we only continue once sync is done
+      _DL_Sync_PB();
+
+      state = Synced_PB;
+      break;
+
+    case Synced_PB:         // 2
+      // next, sync to the LCD
+      state = Syncing_LCD;
+      break;
+
+    case Syncing_LCD:       // 3
+      // note that this is blocking and we only continue once sync is done
+      _DL_Sync_LCD();
+
+      state = Synced_LCD;
+      break;
+
+    case Synced_LCD:        // 4
+      // we're done syncing, so basically we've just received a valid package from the LCD
+      // this is why the next state is Communicated_LCD instead of Idle
+
+      state = Communicated_LCD;
+      break;
+
     case Idle:              // 5
-
-
-      // no break!
-    case Communicating_LCD: // 6
       // when idle, start the transfer with the LCD board
 
-      state = Communicating_LCD;
-      BSP_LED_Toggle(LED_Green);
+      if(1) {
+        // this should be enough to trigger the scope
+        BSP_LED_Off(LED_Red);
+        BSP_LED_On(LED_Red);
+        BSP_LED_Off(LED_Red);
+      }
 
-      // printf("LCD:Tx=");
-      // _dump_packet(DL_TxBuffer_LCD);
-      // printf("\n");
+      // send data to the LCD
+      state = Communicate_LCD;
+      break;
+
+    case Communicate_LCD:   // 6
+      // make sure to update the state *before* sending
+      //  otherwise a very fast transfer might screw up our state machine
+      //  because the DMA CB would not run correctly
+      state = Communicating_LCD;
+
+      // BSP_LED_Toggle(LED_Green);
+
+      // make sure we don't re-use the old buffer
+      cpyPacket(DL_Buffer_Sync, DL_RxBuffer_LCD);
 
       if (HAL_SPI_TransmitReceive_DMA(DL_SPI_Handle_LCD, (uint8_t *)DL_TxBuffer_LCD, (uint8_t *)DL_RxBuffer_LCD, DL_PACKETSIZE) != HAL_OK)
       {
         /* Transfer error in transmission process */
         DL_Error_Handler("Error while running (could not receive packet)");
       }
+
+      // this will, in fact, eat up a LOT of time
+      //  because the transfer takes forever 
+      //  (as the LCD board only sends data as fast as the PB wants to receive)
       _DL_DMA_wait(DL_SPI_Handle_LCD);
-      //   break;
-      // case Communicating_LCD: // 6
-      HAL_Delay(21); // just wait
+
+      // BSP_LED_Toggle(LED_Green);
       break;
 
-    case Communicated_LCD: // 7
+    case Communicating_LCD: // 7
+      // the state will be left from the DMA transfer CB
+      // thus we stay in the current state if nothing else happens
+      break;
+
+    case Communicated_LCD:  // 8
+      // state = Idle; // rerun Idle
+      // return;
+
       if (!checksumOK(DL_RxBuffer_LCD))
       {
         // checksum wrong, exit
@@ -335,8 +406,8 @@ void DL_Start(void) {
         printf("Expected cs 0x%02X got 0x%02X\n", checksum(DL_RxBuffer_LCD), DL_RxBuffer_LCD[8]);
 
         // show that we've received an error along the way but don't stop processing
-        BSP_LED_On(LED_Red);
-        BSP_LED_On(LED_Blue);
+        // BSP_LED_On(LED_Red);
+        // BSP_LED_On(LED_Blue);
 
         DL_ChkCnt_LCD += 1;
         // DL_Error_Handler("Wrong checksum\n");
@@ -352,11 +423,11 @@ void DL_Start(void) {
         cpyPacket(DL_RxBuffer_LCD, DL_TxBuffer_PB);
       }
 
-      state = Communicating_PB;
+      state = Communicate_PB;
 
       break;
 
-    case Communicating_PB: // 8
+    case Communicate_PB:    // 9
       // send the current LCD-state to the PB and store the received PB-state
       if (_DL_DMA_Transfer(DL_SPI_Handle_PB, (uint8_t *)DL_TxBuffer_PB, (uint8_t *)DL_RxBuffer_PB, DL_PACKETSIZE, PB) != HAL_OK)
       {
@@ -367,10 +438,17 @@ void DL_Start(void) {
       // NOTE: we are not waiting for this DMA to finish.
       // If the PB does not respond in time,
       //  the LCD will re-send the data, hopefully.
-      const int PB_CHECKSUM = 1;
-      if (PB_CHECKSUM && !checksumOK(DL_RxBuffer_PB))
-      {
-        // checksum wrong, exit
+
+      state = Communicated_PB;
+      break;
+
+    case Communicating_PB:  // 10
+      // TODO: this is unused right now
+      break;
+
+    case Communicated_PB:   // 11
+      if (!checksumOK(DL_RxBuffer_PB)) {
+        // checksum wrong
         printf("PB:Rx=");
         _dump_packet(DL_RxBuffer_PB);
         printf("\n");
@@ -378,27 +456,17 @@ void DL_Start(void) {
         printf("Expected cs 0x%02X from PB got 0x%02X\n", checksum(DL_RxBuffer_PB), DL_RxBuffer_PB[8]);
 
         // show that we've received an error along the way but don't stop processing
-        BSP_LED_On(LED_Red);
-        BSP_LED_On(LED_Blue);
+        // BSP_LED_On(LED_Red);
+        // BSP_LED_On(LED_Blue);
 
         DL_ChkCnt_PB += 1;
         // DL_Error_Handler("Wrong checksum from PB\n");
-      }
-      else
-      {
+      } else {
         // copy received state (from PB) to send buffer (to LCD)
         cpyPacket(DL_RxBuffer_PB, DL_TxBuffer_LCD);
       }
-
-      state = Communicated_PB;
-      break;
-
-    case Communicated_PB:
-      // we are done with the cycle, so go back to Idle in the next loop
-      state = Idle;
-
-      if (1)
-      {
+      BSP_LED_Toggle(LED_Green);
+      if (1) {
         // output the rx and tx buffers:
         printf("[Delonghi] LCD:RX=");
         _dump_packet(DL_RxBuffer_LCD);
@@ -410,15 +478,19 @@ void DL_Start(void) {
         _dump_packet(DL_TxBuffer_LCD);
         printf(" LCD:CSE=%d PB:CSE=%d\n", DL_ChkCnt_LCD, DL_ChkCnt_PB);
       }
-
-      HAL_Delay(15);
-
+      BSP_LED_Toggle(LED_Green);
+      // we are done with the cycle, so go back to Idle in the next loop
+      state = Idle;
       break;
+
+    case DBG_Halt:
+      BSP_LED_On(LED_Green);
+      BSP_LED_On(LED_Orange);
+      BSP_LED_On(LED_Red);
+      BSP_LED_On(LED_Blue);
     default:
       printf("[Delonghi] Unknown state, halting.\n");
-      while (1)
-      {
-      }
+      while (1) {}
     }
   }
 }
