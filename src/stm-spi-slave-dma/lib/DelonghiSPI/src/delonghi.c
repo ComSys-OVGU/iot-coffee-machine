@@ -517,13 +517,6 @@ void DL_Error_Handler(char * message) {
   Error_Handler();
 }
 
-void DL_Test_Btn() {
-  // a button was pressed so emulate a device button
-
-  printf("[Delonghi] Emulating OK Button");
-  test_btnOverride = DL_LCD_BTN_OK;
-}
-
 int lastBtn = 0;
 void _DL_Debug_LCD(void) {
   // BSP_LED_Off(LED_Red);
