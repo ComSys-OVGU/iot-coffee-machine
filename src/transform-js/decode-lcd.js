@@ -1,5 +1,5 @@
 const checksumOK = require('./checksum').checksumOK
-const packetRegex = /B0.{16}/
+const packetRegex = /B0.{20}/
 
 // the time is encoded as hex in these bits:
 // ........hhmmss....

@@ -10,7 +10,8 @@
 #define LED_Red LED5 // LD5@PD14
 #define LED_Blue LED6 // LD6@PD15
 
-#define DL_PACKETSIZE 9 // each packet is 9 bytes in length
+//#define DL_PACKETSIZE 9 // each packet is 9 bytes in length
+#define DL_PACKETSIZE 11 // each packet is 11 bytes in length
 #define DL_PACKET_LCD_START 0xB0
 #define DL_PACKET_PB_START 0x0B
 

@@ -1,5 +1,5 @@
 const checksumOK = require('./checksum').checksumOK
-const packetRegex = /0B.{16}/
+const packetRegex = /0B.{20}/
 
 // the status is encoded in hex in these bits:
 // ..ss..............
