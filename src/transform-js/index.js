@@ -10,8 +10,8 @@ const MOSI_COL = 3
 const inFile = process.argv[2] || (console.log('input file required'), process.exit(1))
 const outFile = `${inFile.slice(0, -4)}.txt`
 
-function extract ([x0, x1, x2, x3, x4, x5, x6, x7, x8, ...rest], acc = []) {
-  const rows = [x0, x1, x2, x3, x4, x5, x6, x7, x8]
+function extract ([x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, ...rest], acc = []) {
+  const rows = [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10]
   const obj = {
     miso: '',
     mosi: ''
