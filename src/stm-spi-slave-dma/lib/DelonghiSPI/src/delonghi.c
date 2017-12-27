@@ -1,11 +1,11 @@
 #include "delonghi.h"
+
 #include "../../STM32F4-Discovery/src/stm32f4_discovery.h"
 
 extern void _Error_Handler(char * , int);
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 
 void DL_Error_Handler(char * message);
-void _DL_Debug_LCD(void);
 
 /* Buffers used for transmission */
 // these are, in fact, all 11-byte buffers (i.e. V2)
@@ -317,31 +317,6 @@ void DL_Start(void) {
   BSP_LED_Off(LED_Orange);
   BSP_LED_Off(LED_Blue);
 
-  // debug: only communicate with PB
-  const uint8_t LCD_ONLY = 0;
-
-  if (LCD_ONLY) {
-    _DL_Sync_LCD();
-  }
-
-  DL_TxBuffer_LCD[DL_PACKETSIZE-1] = checksum(DL_TxBuffer_LCD);  
-  while (LCD_ONLY) {
-    BSP_LED_Toggle(LED_Green);
-
-    if (_DL_DMA_Transfer(DL_SPI_Handle_LCD, (uint8_t * ) DL_TxBuffer_LCD, (uint8_t * ) DL_RxBuffer_LCD, DL_PACKETSIZE, LCD) != HAL_OK) {
-      /* Transfer error in transmission process */
-      DL_Error_Handler("Error while transferring data with LCD");
-    }
-    _DL_DMA_wait(DL_SPI_Handle_LCD);
-
-
-    // printf("LCD:TX=");
-    // _dump_packet(DL_TxBuffer_LCD);
-    // printf("  LCD:RX=");
-    // _dump_packet(DL_RxBuffer_LCD);
-    // printf(" (CS=%s)\n", (checksumOK(DL_RxBuffer_LCD)?"OK":"NOK"));
-  }
-
   int pkgcount = 0;
 
   while (1) {
@@ -356,7 +331,7 @@ void DL_Start(void) {
 
     case Syncing_PB:        // 1
       // note that this is blocking and we only continue once sync is done
-      // _DL_Sync_PB();
+      _DL_Sync_PB();
 
       state = Synced_PB;
       break;
