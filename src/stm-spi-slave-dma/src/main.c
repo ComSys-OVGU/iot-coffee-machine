@@ -45,6 +45,7 @@
 
 #include <stm32f4_discovery.h>
 #include <delonghi.h>
+#include <uart.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -413,8 +414,17 @@ int _write(int file, char *data, int len)
 /* UART RX complete callback */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+  char input = *huart->pRxBuffPtr;
+
+  // printf("[UART] Got %d %d\n", huart->RxXferSize, huart->RxXferCount);
+  // int i = 0;
+  // for(i = 0; i < 10; i++) {
+  //   printf("%c", uartRxBuffer[i]);
+  // }
+  // printf("\n");
+
+  UART_Handle_RX(input);
 	__HAL_UART_FLUSH_DRREGISTER(&huart2); // Clear the buffer to prevent overrun
-  
 }
 
 void EXTI0_IRQHandler(void) {

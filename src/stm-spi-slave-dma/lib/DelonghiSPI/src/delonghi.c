@@ -1,4 +1,5 @@
 #include "delonghi.h"
+#include "delonghi_utils.h"
 
 #include "../../STM32F4-Discovery/src/stm32f4_discovery.h"
 
@@ -34,11 +35,16 @@ uint8_t DL_RxBuffer_LCD[DL_PACKETSIZE];
 uint8_t DL_ChkCnt_PB = 0;
 uint8_t DL_ChkCnt_LCD = 0;
 
-typedef enum {
-  Old = 0,
-  New = 1
-} Protocol;
-Protocol active_protocol = New;
+/* Debug */
+#ifdef DELONGHI_DEBUG
+  #if DELONGHI_DEBUG == 1
+    int debug_enabled = 1;
+  #else
+    int debug_enabled = 0;
+  #endif
+#else
+  int debug_enabled = 0;
+#endif
 
 typedef enum { 
   Unknown = -1,
@@ -68,41 +74,11 @@ DL_State state = Unknown;
 SPI_HandleTypeDef * DL_SPI_Handle_PB;
 SPI_HandleTypeDef * DL_SPI_Handle_LCD;
 
-/* util functions, export */
-static void _dump_packet_size(uint8_t * packet, int size) {
-  int i = 0;
-  for (i = 0; i < size; i++) {
-    printf("%02X", packet[i]);
-  }
+void _DL_Debug_LCD(void);
+
+void DL_Set_Debug(int new_debug_enabled) {
+  debug_enabled = new_debug_enabled;
 }
-
-static void _dump_packet(uint8_t * packet) {
-  _dump_packet_size(packet, DL_PACKETSIZE);
-}
-
-static uint8_t checksum(uint8_t * packet) {
-  int sum = 0x55; // this is the start value delonghi uses
-
-  int i = 0;
-  for (; i < DL_PACKETSIZE - 1; i++) {
-    sum = (sum + packet[i]) % 256;
-  }
-  return sum;
-}
-
-static int checksumOK(uint8_t * packet) {
-  return checksum(packet) == packet[DL_PACKETSIZE - 1];
-}
-
-static void cpyPacket(uint8_t * src, uint8_t * dst) {
-  int i;
-  for (i = 0; i < DL_PACKETSIZE; i++) {
-    dst[i] = src[i];
-  }
-}
-
-/* /utils */
-
 
 void DL_Init(SPI_HandleTypeDef * spi_handle_pb, SPI_HandleTypeDef * spi_handle_lcd) {
   DL_SPI_Handle_PB = spi_handle_pb;
@@ -317,6 +293,10 @@ void DL_Start(void) {
   BSP_LED_Off(LED_Orange);
   BSP_LED_Off(LED_Blue);
 
+  // on init, generate the correct checksums for both buffers so we can support both v1 and v2
+  DL_TxBuffer_PB[DL_PACKETSIZE-1] = checksum(DL_TxBuffer_PB);
+  DL_TxBuffer_LCD[DL_PACKETSIZE-1] = checksum(DL_TxBuffer_LCD);
+
   int pkgcount = 0;
 
   while (1) {
@@ -331,7 +311,11 @@ void DL_Start(void) {
 
     case Syncing_PB:        // 1
       // note that this is blocking and we only continue once sync is done
-      _DL_Sync_PB();
+      #ifndef DELONGHI_LCD_ONLY
+        _DL_Sync_PB();
+      #elif DELONGHI_LCD_ONLY == 0
+        _DL_Sync_PB();
+      #endif
 
       state = Synced_PB;
       break;
@@ -433,9 +417,17 @@ void DL_Start(void) {
 
       state = Communicate_PB;
 
-      // debug LCD Only
-      // state = Communicated_PB;
+      #ifdef DELONGHI_LCD_ONLY
+        #if DELONGHI_LCD_ONLY == 1
+          // debug: LCD Only
+          state = Communicated_PB;
 
+          uint8_t tmp_DL_RxBuffer_PB[] = {
+            0x0B, 0x07, 0x00, 0x28, 0x0F, 0x20, 0x04, 0x00, 0xC2
+          };
+          cpyPacket(tmp_DL_RxBuffer_PB, DL_RxBuffer_PB);
+        #endif
+      #endif
       break;
 
     case Communicate_PB: // 9
@@ -491,7 +483,7 @@ void DL_Start(void) {
         cpyPacket(DL_RxBuffer_PB, DL_TxBuffer_LCD);
       }
       BSP_LED_Toggle(LED_Green);
-      if (1) {
+      if(debug_enabled) {
         // output the rx and tx buffers:
         printf("[Delonghi] LCD:RX=");
         _dump_packet(DL_RxBuffer_LCD);
