@@ -34,6 +34,7 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
+#include "main.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -47,6 +48,7 @@ extern DMA_HandleTypeDef hdma_spi2_tx;
 extern SPI_HandleTypeDef hspi1;
 extern SPI_HandleTypeDef hspi2;
 extern DMA_HandleTypeDef hdma_usart2_rx;
+extern DMA_Event_t dma_uart_rx;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -89,7 +91,16 @@ void SysTick_Handler(void)
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
+  /* DMA timer */
+  if(dma_uart_rx.timer == 1)
+  {
+      /* DMA Timeout event: set Timeout Flag and call DMA Rx Complete Callback */
+      dma_uart_rx.flag = 1;
+      hdma_usart2_rx.XferCpltCallback(&hdma_usart2_rx);
+  }
+  if(dma_uart_rx.timer) { --dma_uart_rx.timer; }
 
+  
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -99,7 +110,19 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f4xx.s).                    */
 /******************************************************************************/
-
+void USART2_IRQHandler(void) {
+  /* Check for IDLE flag */
+  if (USART2->SR & USART_FLAG_IDLE) {         /* We want IDLE flag only */
+    /* This part is important */
+    /* Clear IDLE flag by reading status register first */
+    /* And follow by reading data register */
+    volatile uint32_t tmp;                  /* Must be volatile to prevent optimizations */
+    tmp = USART2->SR;                       /* Read status register */
+    tmp = USART2->DR;                       /* Read data register */
+    (void)tmp;                              /* Prevent compiler warnings */
+    dma_uart_rx.timer = DMA_TIMEOUT_MS;     /* Start DMA Timeout */
+  }
+}
 /**
 * @brief This function handles DMA1 stream3 global interrupt.
 */

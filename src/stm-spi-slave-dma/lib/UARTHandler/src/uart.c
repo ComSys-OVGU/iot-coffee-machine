@@ -13,32 +13,6 @@ typedef enum {
 } UART_State;
 UART_State uart_state = Command_Input;
 
-void UART_Handle_Command_Input(char input) {
-  switch(input) {
-    case 'd':
-      printf("[UART] Disable Debug Output\n");
-      DL_Set_Debug(0);
-      break;
-    case 'D':
-      printf("[UART] Enable Debug Output\n");
-      DL_Set_Debug(1);
-      break;
-    case 'b':
-      printf("[UART] Input Buffer (%d chars)\n", DL_PACKETSIZE * 2);
-      uart_state = Buffer_Input;
-      break;
-    case 'B':
-      _UART_Dump_Buffer();
-      break;
-    case 'r':
-      printf("[UART] Resetting...\n");
-      NVIC_SystemReset();
-      break;
-    default:
-      printf("[UART] Unknown command: '%c'\n", input);
-      break;
-  }
-}
 
 char char_to_hex(char input) {
   char num = input & 0x0F;
@@ -74,6 +48,34 @@ void UART_Handle_Buffer_Input(char input) {
     // reset state
     UART_Buffer_counter = 0;
     uart_state = Command_Input;
+  }
+}
+
+
+void UART_Handle_Command_Input(char input) {
+  switch(input) {
+    case 'd':
+      printf("[UART] Disable Debug Output\n");
+      DL_Set_Debug(0);
+      break;
+    case 'D':
+      printf("[UART] Enable Debug Output\n");
+      DL_Set_Debug(1);
+      break;
+    case 'b':
+      printf("[UART] Input Buffer (%d chars)\n", DL_PACKETSIZE * 2);
+      uart_state = Buffer_Input;
+      break;
+    case 'B':
+      _UART_Dump_Buffer();
+      break;
+    case 'r':
+      printf("[UART] Resetting...\n");
+      NVIC_SystemReset();
+      break;
+    default:
+      printf("[UART] Unknown command: '%c'\n", input);
+      break;
   }
 }
 

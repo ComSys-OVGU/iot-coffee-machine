@@ -38,11 +38,27 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MAIN_H
 #define __MAIN_H
+
   /* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
-
+#include <stdint.h>
 /* USER CODE END Includes */
+
+
+/* Configuration **************************************************************/
+#define DMA_BUF_SIZE        128     /* DMA circular buffer size in bytes */
+#define DMA_TIMEOUT_MS      50      /* DMA Timeout duration in msec */
+/******************************************************************************/
+
+/* Type definitions ----------------------------------------------------------*/
+typedef struct
+{
+    volatile uint8_t  flag;     /* Timeout event flag */
+    uint16_t timer;             /* Timeout duration in msec */
+    uint16_t prevCNDTR;         /* Holds previous value of DMA_CNDTR */
+} DMA_Event_t;
+
 
 /* Private define ------------------------------------------------------------*/
 
