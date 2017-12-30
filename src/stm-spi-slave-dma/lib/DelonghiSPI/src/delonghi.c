@@ -1,9 +1,13 @@
 #include "delonghi.h"
 #include "delonghi_utils.h"
+#include "delonghi_overwrite.h"
 
 #include "../../STM32F4-Discovery/src/stm32f4_discovery.h"
 
 extern void _Error_Handler(char * , int);
+extern DLO_Buffer DLO_Buffer_LCD;
+extern DLO_Buffer DLO_Buffer_PB;
+
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 
 void DL_Error_Handler(char * message);
@@ -413,6 +417,7 @@ void DL_Start(void) {
       {
         // copy received state (from LCD) to send buffer (to PB)
         cpyPacket(DL_RxBuffer_LCD, DL_TxBuffer_PB);
+        DLO_apply_overwrites(DL_TxBuffer_PB, DLO_Buffer_PB);      
       }
 
       state = Communicate_PB;
@@ -481,6 +486,7 @@ void DL_Start(void) {
       } else {
         // copy received state (from PB) to send buffer (to LCD)
         cpyPacket(DL_RxBuffer_PB, DL_TxBuffer_LCD);
+        DLO_apply_overwrites(DL_TxBuffer_LCD, DLO_Buffer_LCD);      
       }
       BSP_LED_Toggle(LED_Green);
       if(debug_enabled) {
