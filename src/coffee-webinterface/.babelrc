@@ -1,0 +1,12 @@
+{
+  "plugins": [
+    [
+      "inline-import",
+      {
+        "extensions": [".ksy"]
+      }
+    ]
+  ],
+  "presets": ["next/babel"],
+  "ignore": []
+}

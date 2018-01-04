@@ -1,0 +1,42 @@
+{
+  "name": "coffee-webinterface",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@std/esm": "^0.18.0",
+    "babel-plugin-inline-import": "^2.0.6",
+    "common-tags": "^1.6.0",
+    "debug": "^3.1.0",
+    "fast-deep-equal": "^1.0.0",
+    "isomorphic-fetch": "^2.2.1",
+    "js-yaml": "^3.10.0",
+    "js-yaml-loader": "^0.1.0",
+    "json-loader": "^0.5.7",
+    "koa": "^2.0.1",
+    "koa-router": "^7.1.0",
+    "koa-socket": "^4.4.0",
+    "material-ui": "next",
+    "material-ui-icons": "^1.0.0-beta.17",
+    "mobx": "^3.4.1",
+    "next": "latest",
+    "packet": "^0.0.6",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "serialport": "^6.0.4",
+    "standard": "^10.0.3",
+    "yaml-loader": "^0.5.0"
+  },
+  "scripts": {
+    "dev": "nodemon -r @std/esm server/server.js",
+    "build": "next build",
+    "start": "NODE_ENV=production node server/server.js"
+  },
+  "devDependencies": {
+    "babel-eslint": "^8.1.2",
+    "nodemon": "^1.14.6"
+  },
+  "standard": {
+    "parser": "babel-eslint"
+  },
+  "@std/esm": "js"
+}
