@@ -2,7 +2,7 @@
 #ifndef __DELONGHI_H
 #define __DELONGHI_H
 
-#include "stdint.h"
+#include <stdint.h>
 #include "stm32f4xx_hal.h"
 
 // define LEDs with user-friendly names

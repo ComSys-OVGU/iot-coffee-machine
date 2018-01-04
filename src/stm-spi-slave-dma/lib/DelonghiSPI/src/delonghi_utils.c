@@ -34,4 +34,18 @@ void cpyPacket(uint8_t * src, uint8_t * dst) {
   }
 }
 
+void apply_mask_and(uint8_t * buffer, uint8_t * mask) {
+  int i;
+  for(i = 0; i < DL_PACKETSIZE; i++) {
+    buffer[i] = buffer[i] & mask[i];
+  }
+}
+
+void apply_mask_or(uint8_t * buffer, uint8_t * mask) {
+  int i;
+  for(i = 0; i < DL_PACKETSIZE; i++) {
+    buffer[i] = buffer[i] | mask[i];
+  }
+}
+
 /* /utils */

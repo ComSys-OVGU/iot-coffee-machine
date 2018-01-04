@@ -5,20 +5,15 @@ DLO_Buffer DLO_Buffer_PB = {{0x00},{0x00},{0x00}, false, false, false};
 DLO_Buffer DLO_Buffer_LCD = {{0x00},{0x00},{0x00}, false, false, false};
 
 void DLO_apply_overwrites(uint8_t* buffer, DLO_Buffer overwrites) {
-  int i;
   if(overwrites.has_packet) {
     cpyPacket(overwrites.buffer_packet, buffer);
   } else {
     if(overwrites.has_and) {
-      for(i = 0; i < DL_PACKETSIZE; i++) {
-        buffer[i] = buffer[i] & overwrites.buffer_and[i];
-      }
+      apply_mask_and(buffer, overwrites.buffer_and);
     }
 
     if(overwrites.has_or) {
-      for(i = 0; i < DL_PACKETSIZE; i++) {
-        buffer[i] = buffer[i] | overwrites.buffer_or[i];
-      }
+      apply_mask_or(buffer, overwrites.buffer_or);
     }
   }
 

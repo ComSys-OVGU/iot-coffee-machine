@@ -1,5 +1,6 @@
 #include "delonghi.h"
 #include "delonghi_utils.h"
+#include "delonghi_logger.h"
 #include "delonghi_overwrite.h"
 
 #include "../../STM32F4-Discovery/src/stm32f4_discovery.h"
@@ -27,9 +28,6 @@ uint8_t DL_TxBuffer_PB[] = {
 uint8_t DL_TxBuffer_LCD[] = {
   0x0B, 0x00, 0x00, 0x00, 0xD3, 0x00, 0x48, 0x07, 0x00, 0x00, 0xFF
 };
-
-uint8_t test_btnOverride = 0x00;
-uint8_t test_btnCnt = 0;
 
 /* Buffers used for reception */
 uint8_t DL_RxBuffer_PB[DL_PACKETSIZE];
@@ -436,18 +434,6 @@ void DL_Start(void) {
       break;
 
     case Communicate_PB: // 9
-
-      // apply the button mask
-      if (test_btnOverride != 0) {
-        DL_TxBuffer_PB[1] = 0x20 & 0xFF;
-        DL_TxBuffer_PB[7] = 0x01 & 0xFF;
-        DL_TxBuffer_PB[DL_PACKETSIZE-1] = checksum(DL_TxBuffer_PB);
-        if (test_btnCnt++ >= 6) {
-          test_btnOverride = 0;
-          test_btnCnt = 0;
-        }
-      }
-
       // make sure we don't re-use the old buffer
       cpyPacket(DL_Buffer_Sync, DL_RxBuffer_PB);
       // send the current LCD-state to the PB and store the received PB-state
@@ -489,18 +475,7 @@ void DL_Start(void) {
         DLO_apply_overwrites(DL_TxBuffer_LCD, DLO_Buffer_LCD);      
       }
       BSP_LED_Toggle(LED_Green);
-      if(debug_enabled) {
-        // output the rx and tx buffers:
-        printf("[Delonghi] LCD:RX=");
-        _dump_packet(DL_RxBuffer_LCD);
-        printf(" -> PB:TX=");
-        _dump_packet(DL_TxBuffer_PB);
-        printf("  PB:RX=");
-        _dump_packet(DL_RxBuffer_PB);
-        printf(" -> LCD:TX=");
-        _dump_packet(DL_TxBuffer_LCD);
-        printf(" LCD:CSE=%d PB:CSE=%d\n", DL_ChkCnt_LCD, DL_ChkCnt_PB);
-      }
+      DLL_Log();
       BSP_LED_Toggle(LED_Green);
       // we are done with the cycle, so go back to Idle in the next loop
       state = Idle;
@@ -544,7 +519,6 @@ void DL_Test_Btn() {
   // a button was pressed so emulate a device button
 
   printf("[Delonghi] Emulating OK Button\n");
-  test_btnOverride = DL_LCD_BTN_OK;
 }
 
 int lastBtn = 0;

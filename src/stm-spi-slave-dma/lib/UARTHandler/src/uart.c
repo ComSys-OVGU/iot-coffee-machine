@@ -1,10 +1,13 @@
 #include "uart.h"
 #include <delonghi.h>
+#include <delonghi_logger.h>
 #include <delonghi_utils.h>
 #include <delonghi_overwrite.h>
 
 extern DLO_Buffer DLO_Buffer_LCD;
 extern DLO_Buffer DLO_Buffer_PB;
+extern uint8_t DLL_LogMask_LCD[DL_PACKETSIZE];
+extern uint8_t DLL_LogMask_PB[DL_PACKETSIZE];
 
 uint8_t UART_Buffer[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -93,6 +96,17 @@ void UART_Handle_Transfer_Target_Input(char input) {
       DLO_Buffer_PB.has_or = true;
       printf("[UART] Buffer copied to PB:TX Or.\n");
       break;
+
+    case '3':
+      cpyPacket(UART_Buffer, DLL_LogMask_LCD);
+      DLL_Set_LCD_Enabled(true);
+      printf("[UART] Buffer copied to LCD:LogMask.\n");
+      break;
+    case '8':
+      cpyPacket(UART_Buffer, DLL_LogMask_PB);
+      DLL_Set_PB_Enabled(true);
+      printf("[UART] Buffer copied to PB:LogMask.\n");
+      break;
     default:
       printf("[UART] Unknown target.\n");      
       break;
@@ -137,11 +151,11 @@ void UART_Handle_Command_Input(char input) {
   switch(input) {
     case 'd':
       printf("[UART] Disable Debug Output\n");
-      DL_Set_Debug(0);
+      DLL_Set_Debug(false);
       break;
     case 'D':
       printf("[UART] Enable Debug Output\n");
-      DL_Set_Debug(1);
+      DLL_Set_Debug(true);
       break;
     case 'b':
       printf("[UART] Input Buffer (%d chars)\n", DL_PACKETSIZE * 2);
@@ -213,6 +227,10 @@ void UART_Handle_Command_Input(char input) {
     case 'r':
       printf("[UART] Resetting...\n");
       NVIC_SystemReset();
+      break;
+
+    case 'p':
+      DLL_Poll();
       break;
 
     case '\n':
