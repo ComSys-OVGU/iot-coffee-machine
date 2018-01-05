@@ -15,6 +15,8 @@ import {
   PREGROUND
 } from '../lib/delonghi/const/grind-modes'
 
+import { observer } from 'mobx-react'
+
 // for changes to become active, change this file here after you've saved the ksy
 // it must be *unique* so here's a counter for you: 12
 import textKsy from '../static/delonghi_v1.ksy'
@@ -27,6 +29,7 @@ const styles = {
   }
 }
 
+@observer
 class TestPage extends React.Component {
   state = {
     counter: 0
@@ -36,7 +39,9 @@ class TestPage extends React.Component {
     super()
 
     this.delonghi = new Delonghi(new DelonghiWebsocket(), ksy)
-    typeof window !== 'undefined' && (window.delonghi = this.delonghi)
+    typeof window !== 'undefined' && (
+      window.delonghi = this.delonghi
+    )
   }
 
   componentDidMount () {
@@ -83,15 +88,6 @@ class TestPage extends React.Component {
                 </Button>
                 <Button raised color='accent' onClick={() => this.delonghi.setGrindMode('other')}>
                   Other
-                </Button>
-                <Button raised color='accent' onClick={() => this.setState((oldState) => ({
-                  ...oldState,
-                  lcd: {
-                    ...oldState.lcd,
-                    buttons_ok: Number(!oldState.lcd.buttons_ok)
-                  }
-                }), () => console.log(this.state))}>
-                  {this.state['lcd'].buttons_ok ? 'Disable' : 'Enable'} Kalk
                 </Button>
                 <Button raised color='accent' onClick={() => this.delonghi.sendData('p')}>
                   Poll

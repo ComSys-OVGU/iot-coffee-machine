@@ -6,6 +6,7 @@ import {
 
 import { Protocol } from './protocol'
 import { parse } from './parser'
+import { DelonghiState } from './state'
 
 String.prototype.setAt = function (index, replacement) {
   return this.substr(0, index) + replacement + this.substr(index + replacement.length)
@@ -30,6 +31,7 @@ class Delonghi {
     } = this.protocol
     this.PACKET_LEN = lcd.typeLen / 8
     this.fields = Object.keys(types).reduce((acc, typeName) => ({...acc, [typeName]: flatten(types[typeName].fields.map(flattenField))}), {})
+    this.st = new DelonghiState(this)
 
     this.empty = {}
     this.full = {}

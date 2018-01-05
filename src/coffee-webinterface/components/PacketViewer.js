@@ -1,5 +1,6 @@
 import React from 'react'
 import Typography from 'material-ui/Typography'
+import { observer } from 'mobx-react'
 
 import List, {
   ListItem,
@@ -12,25 +13,36 @@ import List, {
 import Switch from 'material-ui/Switch'
 import Input from 'material-ui/Input'
 
-class FilterViewer extends React.PureComponent {
+import { buffers, rxtxBuffers } from '../lib/delonghi/buffers'
+
+@observer
+class HexViewer extends React.Component {
   render () {
     const {
-      and,
-      or
+      type,
+      delonghi: {
+        st: state
+      }
     } = this.props
+
+    const displayBuffers = buffers.filter(({type: bufferType}) => type === bufferType)
 
     return (
       <React.Fragment>
         <Typography>Filters</Typography>
         <pre>
-          & {and}<br />
-          | {or}
+          {displayBuffers.map((buffer) => (
+            <React.Fragment key={buffer.name}>
+              {`${buffer.type}:${buffer.display || buffer.use}`.toUpperCase().padEnd(9, ' ')}{state[buffer.name + '_hex']}<br />
+            </React.Fragment>
+          ))}
         </pre>
       </React.Fragment>
     )
   }
 }
 
+@observer
 class PacketViewer extends React.Component {
   state = {
     enabled: {},
@@ -50,22 +62,36 @@ class PacketViewer extends React.Component {
   }
 
   handleChange = (mappedId) =>
-    ({target: { value } = {}}, checked = value) => this.setState(({inputs, ...rest}) => ({
-      ...rest,
-      inputs: {
-        ...inputs,
-        [mappedId]: checked
-      }
-    }), () => this.updateFilters())
+    ({target: { value } = {}}, checked = value) => {
+      const {
+        props: {
+          type
+        },
+        delonghi: {
+          st: {
+            setFilterInput
+          }
+        }
+      } = this
+
+      setFilterInput(type, mappedId, checked)
+    }
 
   handleEnable = (mappedId) =>
-    (evt, checked) => this.setState(({enabled, ...rest}) => ({
-      ...rest,
-      enabled: {
-        ...enabled,
-        [mappedId]: checked
-      }
-    }), () => this.updateFilters())
+    (evt, checked) => {
+      const {
+        props: {
+          type
+        },
+        delonghi: {
+          st: {
+            setFilterEnabled
+          }
+        }
+      } = this
+
+      setFilterEnabled(type, mappedId, checked)
+    }
 
   updateFilters () {
     const {
@@ -102,36 +128,31 @@ class PacketViewer extends React.Component {
     } = this
 
     const {
-      inputs,
-      enabled
-    } = this.state
-
-    const {
       PACKET_LEN,
       fields,
-      state: {
+      st,
+      st: {
         filters: {
           [type]: {
-            andHex,
-            orHex
+            enabled,
+            inputs
           }
         }
       }
     } = this.delonghi
 
+    const buffer = rxtxBuffers.find((buf) => buf.use === 'tx' && buf.type === type)
+    const txBuffer = st[buffer.name]
+
     return (
       <React.Fragment>
-        <FilterViewer and={andHex} or={orHex} />
+        <HexViewer delonghi={this.delonghi} type={type} />
         <Input
-          onBlur={async ({target: {value} = {}}) => {
-            // const pkg = await decode(value, type)
-            // this.setState((oldState) => ({
-            //   ...oldState,
-            //   [type]: {
-            //     ...oldState[type],
-            //     ...pkg
-            //   }
-            // }))
+          onBlur={({target, target: {value} = ''}) => {
+            // transfer the new value to state
+            st[buffer.name + '_hex'] = value
+            // clear the input field
+            target.value = ''
           }}
           inputProps={{maxLength: PACKET_LEN * 2}}
         />
@@ -141,24 +162,39 @@ class PacketViewer extends React.Component {
               <ListItemText primary={`${field.mappedId} (${field.type})`} />
               <ListItemSecondaryAction>
                 <Switch
-                  checked={!!enabled[field.mappedId]}
+                  checked={!!enabled.get(field.mappedId)}
                   onChange={this.handleEnable(field.mappedId)}
                 />
 
                 {(field.type === 'b1' && (
-                  <Switch
-                    checked={!!inputs[field.mappedId]}
-                    onChange={this.handleChange(field.mappedId)}
-                    style={{height: '28px'}}
-                  />
+                  <React.Fragment>
+                    <Switch
+                      checked={!!inputs.get(field.mappedId)}
+                      onChange={this.handleChange(field.mappedId)}
+                      style={{height: '28px'}}
+                    />
+                    <Switch
+                      checked={!!txBuffer.get(field.mappedId)}
+                      disabled
+                      style={{height: '28px'}}
+                    />
+                  </React.Fragment>
                 )) || (
-                  <Input
-                    value={inputs[field.mappedId] || ''}
-                    onChange={this.handleChange(field.mappedId)}
-                    // onBlur={this.handleChange(field.mappedId)}
-                    style={{width: 50, marginRight: 12}}
-                    inputProps={{maxLength: 2}}
-                  />
+                  <React.Fragment>
+                    <Input
+                      value={inputs.get(field.mappedId) || ''}
+                      onChange={this.handleChange(field.mappedId)}
+                      // onBlur={this.handleChange(field.mappedId)}
+                      style={{width: 50, marginRight: 12}}
+                      inputProps={{maxLength: 2}}
+                    />
+                    <Input
+                      value={txBuffer.get(field.mappedId) || ''}
+                      style={{width: 50, marginRight: 12}}
+                      inputProps={{maxLength: 2}}
+                      disabled
+                    />
+                  </React.Fragment>
                 )}
               </ListItemSecondaryAction>
             </ListItem>

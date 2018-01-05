@@ -13,6 +13,8 @@ import Reboot from 'material-ui/Reboot'
 import withRoot from './withRoot'
 import { menuItems } from './Drawer/AppDrawerMenu'
 
+import DevTools from 'mobx-react-devtools'
+
 const drawerWidth = 240
 const styles = theme => ({
   root: {
@@ -84,6 +86,7 @@ class PermanentDrawer extends React.Component {
               <Typography type='title' color='inherit' noWrap>
                 {title}
               </Typography>
+              <DevTools />
             </Toolbar>
           </AppBar>
           {drawer}
