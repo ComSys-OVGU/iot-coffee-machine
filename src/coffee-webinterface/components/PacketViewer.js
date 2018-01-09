@@ -13,34 +13,8 @@ import List, {
 import Switch from 'material-ui/Switch'
 import Input from 'material-ui/Input'
 
+import { HexViewer } from './HexViewer'
 import { buffers, rxtxBuffers } from '../lib/delonghi/buffers'
-
-@observer
-class HexViewer extends React.Component {
-  render () {
-    const {
-      type,
-      delonghi: {
-        st: state
-      }
-    } = this.props
-
-    const displayBuffers = buffers.filter(({type: bufferType}) => type === bufferType)
-
-    return (
-      <React.Fragment>
-        <Typography>Filters</Typography>
-        <pre>
-          {displayBuffers.map((buffer) => (
-            <React.Fragment key={buffer.name}>
-              {`${buffer.type}:${buffer.display || buffer.use}`.toUpperCase().padEnd(9, ' ')}{state[buffer.name + '_hex']}<br />
-            </React.Fragment>
-          ))}
-        </pre>
-      </React.Fragment>
-    )
-  }
-}
 
 @observer
 class PacketViewer extends React.Component {
@@ -68,7 +42,7 @@ class PacketViewer extends React.Component {
           type
         },
         delonghi: {
-          st: {
+          state: {
             setFilterInput
           }
         }
@@ -84,7 +58,7 @@ class PacketViewer extends React.Component {
           type
         },
         delonghi: {
-          st: {
+          state: {
             setFilterEnabled
           }
         }
@@ -130,8 +104,8 @@ class PacketViewer extends React.Component {
     const {
       PACKET_LEN,
       fields,
-      st,
-      st: {
+      state,
+      state: {
         filters: {
           [type]: {
             enabled,
@@ -142,7 +116,7 @@ class PacketViewer extends React.Component {
     } = this.delonghi
 
     const buffer = rxtxBuffers.find((buf) => buf.use === 'tx' && buf.type === type)
-    const txBuffer = st[buffer.name]
+    const txBuffer = state[buffer.name]
 
     return (
       <React.Fragment>
@@ -150,7 +124,7 @@ class PacketViewer extends React.Component {
         <Input
           onBlur={({target, target: {value} = ''}) => {
             // transfer the new value to state
-            st[buffer.name + '_hex'] = value
+            state[buffer.name + '_hex'] = value
             // clear the input field
             target.value = ''
           }}

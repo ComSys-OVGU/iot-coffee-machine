@@ -44,7 +44,7 @@ class DelonghiState {
       }
     }
     runInAction('set initial packets', () => {
-      console.log('setting initial packets', packets)
+      // console.log('setting initial packets', packets)
       for (const type of types) {
         Object.assign(this.filters[type], packets[type])
       }
@@ -61,7 +61,26 @@ class DelonghiState {
     this.filters[type].inputs.set(field, value)
   }
 
-  constructor ({protocol: {encode, decode}, PACKET_LEN}) {
+  pressButton (buttonName, duration = 1000) {
+    this.setButtonEnabled(buttonName, true)
+
+    setTimeout(() => {
+      this.setButtonEnabled(buttonName, false)
+    }, duration)
+  }
+
+  @action.bound
+  setButtonEnabled (buttonName, enabled) {
+    this.filters.lcd.inputs.set(buttonName, enabled)
+    this.filters.lcd.enabled.set(buttonName, enabled)
+
+    // if no more button is active, then disable the counter
+    const cnt = this.filters.lcd.obj.last_byte_cnt_buttons || 0
+    const enableCounter = enabled || cnt > 0
+    this.filters.lcd.enabled.set('last_byte_cnt_buttons', enableCounter)
+  }
+
+  constructor ({protocol: {encode, decode}, PACKET_LEN, transport}) {
     this.encode = encode
     this.decode = decode
 
@@ -78,7 +97,7 @@ class DelonghiState {
     }
 
     // apply all buffers into the state
-    buffers.forEach(({name, type}) => {
+    buffers.forEach(({name, type, uartBuffer = ''}) => {
       extendObservable(this, {
         // each buffer is held as the *decoded* object
         [name]: observable.map(),
@@ -91,6 +110,22 @@ class DelonghiState {
           }
         )
       })
+
+      // only send uartBuffers to the uart
+      if (uartBuffer) {
+        reaction(
+          () => ({
+            hex: this[name + '_hex']
+          }),
+          ({hex}) => {
+            const updateCmd = `b${hex}t${uartBuffer}`
+            console.log(`Updating ${name} with new val: ${updateCmd}`)
+            transport.sendData(updateCmd)
+          }, {
+            name: `${name}-send-reaction`
+          }
+        )
+      }
     })
 
     types.forEach((type) => {
@@ -104,9 +139,18 @@ class DelonghiState {
         get obj () {
           const convert = (val) => typeof val === 'undefined' ? 0 : typeof val === 'boolean' ? Number(val) : parseInt(val, 16)
 
-          return Object.assign({}, ...this.enabled.entries().map(
+          const convertedEnabledValues = Object.assign({}, ...this.enabled.entries().map(
             ([key, filterEnabled]) => filterEnabled ? { [key]: (convert(this.inputs.get(key))) } : {}
           ))
+
+          // set the number of buttons by counting active buttons
+          if (this.enabled.get('last_byte_cnt_buttons')) {
+            convertedEnabledValues['last_byte_cnt_buttons'] = Object.entries(convertedEnabledValues).reduce(
+              (sum, [key, entry]) => sum + (key.startsWith('buttons_') && entry === 1 ? 1 : 0)
+            , 0)
+          }
+
+          return convertedEnabledValues
         },
         get and () {
           return {...this.full, ...this.obj}

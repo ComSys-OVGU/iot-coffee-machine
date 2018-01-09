@@ -28,25 +28,33 @@ export const overwriteBuffers = [
     name: 'DLO_AndBuffer_LCD',
     type: 'lcd',
     use: 'and',
-    display: '&'
+    display: '&',
+    // uartBuffer: '1'
+    uartBuffer: '6'
   },
   {
     name: 'DLO_OrBuffer_LCD',
     type: 'lcd',
     use: 'or',
-    display: '|'
+    display: '|',
+    // uartBuffer: '2'
+    uartBuffer: '7'
   },
   {
     name: 'DLO_AndBuffer_PB',
     type: 'pb',
     use: 'and',
-    display: '&'
+    display: '&',
+    // uartBuffer: '6'
+    uartBuffer: '1'
   },
   {
     name: 'DLO_OrBuffer_PB',
     type: 'pb',
     use: 'or',
-    display: '|'
+    display: '|',
+    // uartBuffer: '7'
+    uartBuffer: '2'
   }
 ]
 
@@ -54,12 +62,14 @@ export const logBuffers = [
   {
     name: 'DLL_Buffer_LCD',
     type: 'lcd',
-    use: 'log'
+    use: 'log',
+    uartBuffer: '3'
   },
   {
     name: 'DLL_Buffer_PB',
     type: 'pb',
-    use: 'log'
+    use: 'log',
+    uartBuffer: '8'
   }
 ]
 

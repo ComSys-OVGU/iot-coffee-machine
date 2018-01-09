@@ -58,4 +58,4 @@ class LogViewer extends React.Component {
   }
 }
 
-export { LogViewer }
+export { LogViewer, LogViewerPure }

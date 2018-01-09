@@ -5,23 +5,19 @@ import Button from 'material-ui/Button'
 import Grid from 'material-ui/Grid'
 
 import 'isomorphic-fetch'
-import yaml from 'js-yaml'
 
 import { LogViewer } from '../components/LogViewer'
 import { PacketViewer } from '../components/PacketViewer'
+import { init, delonghi } from '../lib/delonghi'
 
-import Delonghi, { DelonghiWebsocket } from '../lib/delonghi'
 import {
   PREGROUND
 } from '../lib/delonghi/const/grind-modes'
 
 import { observer } from 'mobx-react'
 
-// for changes to become active, change this file here after you've saved the ksy
-// it must be *unique* so here's a counter for you: 12
-import textKsy from '../static/delonghi_v1.ksy'
-
-const ksy = yaml.safeLoad(textKsy)
+// initialize delonghi with default transport and protocol
+init()
 
 const styles = {
   grid: {
@@ -38,10 +34,7 @@ class TestPage extends React.Component {
   constructor () {
     super()
 
-    this.delonghi = new Delonghi(new DelonghiWebsocket(), ksy)
-    typeof window !== 'undefined' && (
-      window.delonghi = this.delonghi
-    )
+    this.delonghi = delonghi
   }
 
   componentDidMount () {

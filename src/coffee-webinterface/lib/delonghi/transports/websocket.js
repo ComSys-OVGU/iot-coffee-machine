@@ -1,7 +1,7 @@
 import io from 'socket.io-client'
 
 class DelonghiWebsocket {
-  constructor (address = 'ws://0.0.0.0:3000') {
+  constructor (address = '') {
     this.socket = io(address)
   }
 
