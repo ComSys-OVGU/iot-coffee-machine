@@ -45,6 +45,7 @@
 
 #include <stm32f4_discovery.h>
 #include <delonghi.h>
+#include <uart.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -60,7 +61,13 @@ DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-uint8_t uartRxBuffer = 0x00;
+uint8_t uartRxBuffer[DMA_BUF_SIZE]; /* Circular buffer for DMA */
+
+/* DMA Timeout event structure
+ * Note: prevCNDTR initial value must be set to maximum size of DMA buffer!
+*/
+DMA_Event_t dma_uart_rx = {0,0,DMA_BUF_SIZE};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -113,7 +120,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
   /* Start the receiver */
 	__HAL_UART_FLUSH_DRREGISTER(&huart2);
-	HAL_UART_Receive_DMA(&huart2, &uartRxBuffer, 1);
+	HAL_UART_Receive_DMA(&huart2, (uint8_t*)uartRxBuffer, DMA_BUF_SIZE);
+
+  /* Disable Half Transfer Interrupt */
+  __HAL_DMA_DISABLE_IT(huart2.hdmarx, DMA_IT_HT);
 
   // this is merely to make debugging a bit easier
   //  as my programmer would reset the board twice,
@@ -253,6 +263,7 @@ static void MX_USART2_UART_Init(void)
 
   huart2.Instance = USART2;
   huart2.Init.BaudRate = 921600;
+  // huart2.Init.BaudRate = 230400;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -264,6 +275,10 @@ static void MX_USART2_UART_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  /* UART2 IDLE Interrupt Configuration */
+  SET_BIT(USART2->CR1, USART_CR1_IDLEIE);
+  HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(USART2_IRQn);
 }
 
 /** 
@@ -404,7 +419,7 @@ int _write(int file, char *data, int len)
 
    // arbitrary timeout 1000
    HAL_StatusTypeDef status =
-      HAL_UART_Transmit(&huart2, (uint8_t*)data, len, 1000);
+      HAL_UART_Transmit(&huart2, (uint8_t*)data, len, 1);
 
    // return # of bytes written - as best we can tell
    return (status == HAL_OK ? len : 0);
@@ -413,8 +428,42 @@ int _write(int file, char *data, int len)
 /* UART RX complete callback */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	__HAL_UART_FLUSH_DRREGISTER(&huart2); // Clear the buffer to prevent overrun
+  uint16_t i, pos, start, length;
+  uint16_t currCNDTR = __HAL_DMA_GET_COUNTER(huart->hdmarx);
   
+  /* Ignore IDLE Timeout when the received characters exactly filled up the DMA buffer and DMA Rx Complete IT is generated, but there is no new character during timeout */
+  if(dma_uart_rx.flag && currCNDTR == DMA_BUF_SIZE)
+  { 
+      dma_uart_rx.flag = 0;
+      return;
+  }
+  
+  /* Determine start position in DMA buffer based on previous CNDTR value */
+  start = (dma_uart_rx.prevCNDTR < DMA_BUF_SIZE) ? (DMA_BUF_SIZE - dma_uart_rx.prevCNDTR) : 0;
+  
+  if(dma_uart_rx.flag)    /* Timeout event */
+  {
+      /* Determine new data length based on previous DMA_CNDTR value:
+        *  If previous CNDTR is less than DMA buffer size: there is old data in DMA buffer (from previous timeout) that has to be ignored.
+        *  If CNDTR == DMA buffer size: entire buffer content is new and has to be processed.
+      */
+      length = (dma_uart_rx.prevCNDTR < DMA_BUF_SIZE) ? (dma_uart_rx.prevCNDTR - currCNDTR) : (DMA_BUF_SIZE - currCNDTR);
+      dma_uart_rx.prevCNDTR = currCNDTR;
+      dma_uart_rx.flag = 0;
+  }
+  else                /* DMA Rx Complete event */
+  {
+      length = DMA_BUF_SIZE - start;
+      dma_uart_rx.prevCNDTR = DMA_BUF_SIZE;
+  }
+  
+
+  // printf("[UART] Got start=%d length=%d, currCNDTR=%d cnt=%d\n", start, length, currCNDTR, huart->RxXferCount);
+  /* Process new data */
+  for(i=0,pos=start; i<length; ++i,++pos) {
+    // printf("%c", uartRxBuffer[pos]);
+    UART_Handle_RX(uartRxBuffer[pos]);
+  }
 }
 
 void EXTI0_IRQHandler(void) {

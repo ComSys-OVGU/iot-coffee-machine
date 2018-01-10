@@ -2,7 +2,7 @@
 #ifndef __DELONGHI_H
 #define __DELONGHI_H
 
-#include "stdint.h"
+#include <stdint.h>
 #include "stm32f4xx_hal.h"
 
 // define LEDs with user-friendly names
@@ -23,6 +23,7 @@
 #include "delonghi_v2.h"
 #endif
 #endif
+void DL_Set_Debug(int new_debug_enabled);
 void DL_Init(SPI_HandleTypeDef * spi_handle_pb, SPI_HandleTypeDef * spi_handle_lcd);
 void DL_Sync(void);
 void DL_Start(void);
