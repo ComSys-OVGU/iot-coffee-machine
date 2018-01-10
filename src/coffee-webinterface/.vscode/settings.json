@@ -1,0 +1,5 @@
+{
+    "terminal.integrated.env.osx": {
+        "PATH": "/Users/fabian/.platformio/penv/bin:~/.odrive-agent/bin:/Users/fabian/.gobin/bin:/Volumes/smpl/microservices/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/VMware Fusion.app/Contents/Public:/opt/X11/bin:/Applications/Wireshark.app/Contents/MacOS:~/Library/Python/3.6/bin/:~/Library/Python/2.7/bin/"
+    }
+}

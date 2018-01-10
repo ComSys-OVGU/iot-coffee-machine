@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    ["transform-decorators-legacy"],
+    [
+      "inline-import",
+      {
+        "extensions": [".ksy"]
+      }
+    ]
+  ],
+  "presets": ["next/babel"],
+  "ignore": []
+}
