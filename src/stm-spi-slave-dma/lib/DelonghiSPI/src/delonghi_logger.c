@@ -62,9 +62,27 @@ void DLL_Log(void) {
       // save current comapre buffer as last
       cpyPacket(compare, DLL_Last_RxBuffer_LCD);
     }
+    if(DLL_PB_enabled) {
+      // compare current buffer to last with mask applied
+      uint8_t compare[DL_PACKETSIZE];
+      cpyPacket(DL_RxBuffer_PB, compare);
+      apply_mask_and(compare, DLL_LogMask_PB);
+
+      int i;
+      for(i = 0; i < DL_PACKETSIZE; i++) {
+        if(DLL_Last_RxBuffer_PB[i] != compare[i]) {
+          should_log = true;
+          break;
+        }
+      }
+
+      // save current comapre buffer as last
+      cpyPacket(compare, DLL_Last_RxBuffer_PB);
+    }
   }
 
   if(should_log) {
+    unsigned long current_tick = (unsigned long)HAL_GetTick();
     // output the rx and tx buffers:
     printf("[Delonghi] LCD:RX=");
     _dump_packet(DL_RxBuffer_LCD);
@@ -74,7 +92,12 @@ void DLL_Log(void) {
     _dump_packet(DL_RxBuffer_PB);
     printf(" -> LCD:TX=");
     _dump_packet(DL_TxBuffer_LCD);
-    printf(" LCD:CSE=%d PB:CSE=%d\n", DL_ChkCnt_LCD, DL_ChkCnt_PB);
+
+    if(poll_enabled) {
+      printf(" LCD:CSE=%d PB:CSE=%d\n", DL_ChkCnt_LCD, DL_ChkCnt_PB);
+    } else {
+      printf(" TS=%lu\n", current_tick);
+    }
     
     poll_enabled = false;
   }
