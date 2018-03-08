@@ -103,6 +103,7 @@ void _DL_DMA_wait(SPI_HandleTypeDef * spi_handle) {
   while (HAL_SPI_GetState(spi_handle) != HAL_SPI_STATE_READY) {
     // wait for DMA to signal that the transaction finished
     HAL_Delay(0);
+    }
   }
   BSP_LED_Off(LED_Orange);
 }
@@ -298,6 +299,8 @@ void DL_Start(void) {
   // on init, generate the correct checksums for both buffers so we can support both v1 and v2
   DL_TxBuffer_PB[DL_PACKETSIZE-1] = checksum(DL_TxBuffer_PB);
   DL_TxBuffer_LCD[DL_PACKETSIZE-1] = checksum(DL_TxBuffer_LCD);
+  DL_RxBuffer_PB[DL_PACKETSIZE-1] = checksum(DL_RxBuffer_PB);
+  DL_RxBuffer_LCD[DL_PACKETSIZE-1] = checksum(DL_RxBuffer_LCD);
 
   int pkgcount = 0;
 
@@ -425,9 +428,15 @@ void DL_Start(void) {
           // debug: LCD Only
           state = Communicated_PB;
 
-          uint8_t tmp_DL_RxBuffer_PB[] = {
-            0x0B, 0x07, 0x00, 0x28, 0x0F, 0x20, 0x04, 0x00, 0xC2
-          };
+          #if DELONGHI_PROTOCOL == 1
+            uint8_t tmp_DL_RxBuffer_PB[] = {
+              0x0B, 0x07, 0x00, 0x28, 0x0F, 0x20, 0x04, 0x00, 0xC2
+            };
+          #elif DELONGHI_PROTOCOL == 2
+            uint8_t tmp_DL_RxBuffer_PB[] = {
+              0x0B, 0x07, 0x00, 0x28, 0x0F, 0x20, 0x04, 0x00, 0xC2, 0x00, 0x84
+            };
+          #endif
           cpyPacket(tmp_DL_RxBuffer_PB, DL_RxBuffer_PB);
         #endif
       #endif
@@ -454,14 +463,14 @@ void DL_Start(void) {
       // TODO: this is unused right now
       break;
 
-    case Communicated_PB:   // 11
+    case Communicated_PB: {  // 11
       if (!checksumOK(DL_RxBuffer_PB)) {
         // checksum wrong
         printf("PB:Rx=");
         _dump_packet(DL_RxBuffer_PB);
         printf("\n");
 
-        printf("Expected cs 0x%02X from PB got 0x%02X\n", checksum(DL_RxBuffer_PB), DL_RxBuffer_PB[8]);
+        printf("Expected cs 0x%02X from PB got 0x%02X\n", checksum(DL_RxBuffer_PB), DL_RxBuffer_PB[DL_PACKETSIZE - 1]);
 
         // show that we've received an error along the way but don't stop processing
         // BSP_LED_On(LED_Red);
@@ -480,7 +489,7 @@ void DL_Start(void) {
       // we are done with the cycle, so go back to Idle in the next loop
       state = Idle;
       break;
-
+    }
     case DBG_Halt:
       BSP_LED_On(LED_Green);
       BSP_LED_On(LED_Orange);
@@ -515,16 +524,20 @@ void DL_Error_Handler(char * message) {
   Error_Handler();
 }
 
-void DL_Test_Btn() {
-  // a button was pressed so emulate a device button
+void DL_Soft_Reboot() {
+  printf("[Delonghi] Soft-rebooting\n");
+  state = Inited;
+}
 
-  printf("[Delonghi] Emulating OK Button\n");
+void DL_Test_Btn() {
+  DL_Soft_Reboot();
 }
 
 int lastBtn = 0;
 void _DL_Debug_LCD(void) {
   // BSP_LED_Off(LED_Red);
-
+#ifdef DELONGHI_DEBUG
+#if DELONGHI_DEBUG == 1
   // seems we've received a valid package
   // now to rev-eng the whole LCD we provide a debug mode
   // that uses 8 btns to increase the 8 bytes of the pwr-board response
@@ -607,4 +620,6 @@ void _DL_Debug_LCD(void) {
 
     lastBtn = 1;
   }
+#endif
+#endif
 }

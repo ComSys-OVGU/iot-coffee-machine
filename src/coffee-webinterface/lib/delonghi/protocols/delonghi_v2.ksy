@@ -1,7 +1,7 @@
 meta:
-  id: delonghi_v1
+  id: delonghi_v2
   endian: be
-  file-extension: delonghi_v1
+  file-extension: delonghi_v2
 seq:
   - id: packets
     type: packet
@@ -16,7 +16,7 @@ types:
         type: u1
         enum: packet_type
       - id: body
-        size: 7
+        size: 9
         type:
           switch-on: packet_type
           cases:
@@ -31,7 +31,7 @@ types:
         type: u1
         enum: packet_type
       - id: 'body_'
-        size: 7
+        size: 9
         type: lcd_body
       - id: checksum
         type: u1
@@ -42,7 +42,7 @@ types:
         type: u1
         enum: packet_type
       - id: 'body_'
-        size: 7
+        size: 9
         type: pb_body
       - id: checksum
         type: u1
@@ -51,28 +51,36 @@ types:
     seq:
       - id: buttons
         type: lcd_buttons
-      - id: alternating
+      - id: non_alternating
         type: u1
       - id: time
         type: lcd_time
       - id: last_byte
         type: lcd_last_byte
+      - id: static_1_75
+        type: u1
+      - id: static_2_00
+        type: u1
   pb_body:
     seq:
       - id: byte_0_
         type: pb_body_0
       - id: byte_1_
-        type: pb_body_1
+        type: pb_body_x
       - id: byte_2_
         type: pb_body_2
       - id: byte_3_
-        type: pb_body_3
+        type: pb_body_x
       - id: byte_4_
-        type: pb_body_4
+        type: pb_body_x
       - id: byte_5_
         type: pb_body_5
       - id: byte_6_
         type: pb_body_6
+      - id: byte_7_
+        type: pb_body_7
+      - id: byte_8_
+        type: pb_body_x
   lcd_time:
     seq:
       - id: hour
@@ -83,37 +91,40 @@ types:
         type: u1
   lcd_buttons:
     seq:
-      - id: two_small_coffees
-        type: b1
-      - id: one_small_coffee
-        type: b1
-      - id: ok
-        type: b1
-      - id: hot_water
-        type: b1
-      - id: flush_water
-        type: b1
-      - id: p
-        type: b1
-      - id: possibly_hidden
-        type: b1
-      - id: pwr
-        type: b1
-      - id: unknown_3
-        type: b1
-      - id: unknown_2
-        type: b1
       - id: unknown_1
-        type: b1
-      - id: two_big_coffees
-        type: b1
-      - id: caffee_latte
         type: b1
       - id: latte_macchiato
         type: b1
       - id: cappuchino
         type: b1
+      - id: caffee_latte
+        type: b1
+        
+      - id: ok
+        type: b1
+      - id: flush_water
+        type: b1
+      - id: p
+        type: b1
+      - id: pwr
+        type: b1
+        
+      - id: possibly_hidden
+        type: b1
+      - id: two_big_coffees
+        type: b1
       - id: one_big_coffee
+        type: b1
+      - id: unknown_2
+        type: b1
+        
+      - id: unknown_3
+        type: b1
+      - id: hot_water
+        type: b1
+      - id: one_small_coffee
+        type: b1
+      - id: two_small_coffees
         type: b1
   lcd_last_byte:
     seq:
@@ -154,13 +165,13 @@ types:
         type: b1
 
       # byte_0_bit_3 (b1)
-      - id: state_menu
+      - id: unknown_0_3
         type: b1
 
       # byte_0_bit_4 (b1)
       - id: mode
         type: b4
-
+        enum: pb_mode
   pb_body_1:
     seq:
       # byte_1_bit_0 (b1)
@@ -172,25 +183,26 @@ types:
   pb_body_2:
     seq:
       # byte_2_bit_0 (b1)
-      - id: unknown_2_0
-        type: b1
-      # byte_2_bit_1 (b1)
-      - id: unknown_2_1
-        type: b1
-        
       - id: grind_mode
-        type: b3
+        type: b4
         enum: grind_mode
+        
+      # byte_2_bit_4 (b1)
+      - id: unknown_2_4
+        type: b1
 
       # byte_2_bit_5 (b1)
       - id: unknown_2_5
         type: b1
+
       # byte_2_bit_6 (b1)
       - id: unknown_2_6
         type: b1
+
       # byte_2_bit_7 (b1)
       - id: unknown_2_7
         type: b1
+
 
   pb_body_3:
     seq:
@@ -233,7 +245,7 @@ types:
         type: b1
 
       # byte_4_bit_3 (b1)
-      - id: sensor_door_open
+      - id: unknown_4_3
         type: b1
 
       # byte_4_bit_4 (b1)
@@ -249,25 +261,25 @@ types:
         type: b1
 
       # byte_4_bit_7 (b1)
-      - id: sensor_waterspout_installed
+      - id: unknown_4_7
         type: b1
 
   pb_body_5:
     seq:
       # byte_5_bit_0 (b1)
-      - id: unknown_5_0
+      - id: energy_save
         type: b1
 
       # byte_5_bit_1 (b1)
-      - id: unknown_5_1_white_screen
+      - id: sensor_watertank_empty
         type: b1
 
       # byte_5_bit_2 (b1)
-      - id: msg_vorgemahlner_kaffee
+      - id: unknown_5_2
         type: b1
 
       # byte_5_bit_3 (b1)
-      - id: msg_zu_fein_gemahlen
+      - id: sensor_door_open
         type: b1
 
       # byte_5_bit_4 (b1)
@@ -275,15 +287,15 @@ types:
         type: b1
 
       # byte_5_bit_5 (b1)
-      - id: sensor_descale
+      - id: unknown_5_5
         type: b1
 
       # byte_5_bit_6 (b1)
-      - id: sensor_groundscontainer_full
+      - id: unknown_5_6
         type: b1
 
       # byte_5_bit_7 (b1)
-      - id: sensor_watertank_empty
+      - id: sensor_waterspout_installed
         type: b1
 
   pb_body_6:
@@ -297,7 +309,7 @@ types:
         type: b1
 
       # byte_6_bit_2 (b1)
-      - id: msg_kaffeemenge_reduzieren
+      - id: sensor_beans_empty
         type: b1
 
       # byte_6_bit_3 (b1)
@@ -313,11 +325,79 @@ types:
         type: b1
 
       # byte_6_bit_6 (b1)
-      - id: unknown_6_6
+      - id: sensor_groundscontainer_missing
         type: b1
 
       # byte_6_bit_7 (b1)
       - id: unknown_6_7
+        type: b1
+
+  pb_body_7:
+    seq:
+      # byte_6_bit_0 (b1)
+      - id: unknown_7_0
+        type: b1
+
+      # byte_6_bit_1 (b1)
+      - id: unknown_7_1
+        type: b1
+
+      # byte_6_bit_2 (b1)
+      - id: unknown_7_2
+        type: b1
+
+      # byte_6_bit_3 (b1)
+      - id: unknown_7_3
+        type: b1
+
+      # byte_6_bit_4 (b1)
+      - id: unknown_7_4
+        type: b1
+
+      # byte_6_bit_5 (b1)
+      - id: unknown_7_5
+        type: b1
+
+      # byte_6_bit_6 (b1)
+      - id: unknown_7_6
+        type: b1
+
+      # byte_6_bit_7 (b1)
+      - id: unknown_7_7
+        type: b1
+
+  pb_body_8:
+    seq:
+      # byte_6_bit_0 (b1)
+      - id: unknown_8_0
+        type: b1
+
+      # byte_6_bit_1 (b1)
+      - id: unknown_8_1
+        type: b1
+
+      # byte_6_bit_2 (b1)
+      - id: unknown_8_2
+        type: b1
+
+      # byte_6_bit_3 (b1)
+      - id: unknown_8_3
+        type: b1
+
+      # byte_6_bit_4 (b1)
+      - id: unknown_8_4
+        type: b1
+
+      # byte_6_bit_5 (b1)
+      - id: unknown_8_5
+        type: b1
+
+      # byte_6_bit_6 (b1)
+      - id: unknown_8_6
+        type: b1
+
+      # byte_6_bit_7 (b1)
+      - id: unknown_8_7
         type: b1
 enums:
   packet_type:
@@ -327,9 +407,9 @@ enums:
     0x07: ready
     0x01: error
   grind_mode:
-    0x00: extra_mild
-    0x01: mild
-    0x02: normal
-    0x03: strong
-    0x04: extra_strong
-    0x05: preground
+    0x00: preground
+    0x01: extra_mild
+    0x02: mild
+    0x03: normal
+    0x04: strong
+    0x05: extra_strong

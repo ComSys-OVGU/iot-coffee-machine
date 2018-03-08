@@ -33,6 +33,7 @@ export const Protocol = (PROTOCOL, KSY) => {
 
   return {
     types,
+    enums: Object.assign({}, ...Object.entries(KSY.enums).map(([enumName,enumValues]) => ({ [enumName]: Object.assign({...enumValues}, ...Object.entries(enumValues).map(([a,b]) => ({ [b]: a }))) }))),
     parser,
     serializer,
     encode,

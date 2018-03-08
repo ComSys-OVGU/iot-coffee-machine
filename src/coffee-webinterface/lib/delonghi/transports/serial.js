@@ -31,7 +31,7 @@ class DelonghiSerial {
 
     this.parser.on('data', (rawdata) => {
       const data = rawdata.toString('utf8')
-      log(`data: '${data}'`)
+      log(`rxdata: '${data}'`)
       this.onDataListener && this.onDataListener(data)
     })
 

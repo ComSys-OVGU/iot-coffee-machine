@@ -165,11 +165,11 @@ void UART_Handle_Command_Input(char input) {
       _UART_Dump_Buffer();
       break;
     case 't':
-      printf("[UART] Transfer Buffer:\n0\tLCD:TX Packet\n1\tLCD:TX And\n2\tLCD:TX Or\n5\tPB:TX Packet\n6\tPB:TX And\n7\tPB:TX Or\n");
+      printf("[UART] Transfer Buffer:\n0\tLCD:TX Packet\n1\tLCD:TX And\n2\tLCD:TX Or\n3\tLCD:Logmask\n5\tPB:TX Packet\n6\tPB:TX And\n7\tPB:TX Or\n8\tPB:Logmask\n");
       uart_state = Transfer_Target_Input;
       break;
     case 'T':
-      printf("[UART] Reset Overwrite:\n0\tLCD:TX Packet\n1\tLCD:TX And\n2\tLCD:TX Or\n5\tPB:TX Packet\n6\tPB:TX And\n7\tPB:TX Or\n");
+      printf("[UART] Reset Overwrite:\n0\tLCD:TX Packet\n1\tLCD:TX And\n2\tLCD:TX Or\n3\tLCD:Logmask\n5\tPB:TX Packet\n6\tPB:TX And\n7\tPB:TX Or\n8\tPB:Logmask\n");
       uart_state = Reset_Target_Input;
       break;
     case 'a': {

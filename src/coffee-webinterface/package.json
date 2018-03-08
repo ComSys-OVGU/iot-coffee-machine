@@ -30,6 +30,7 @@
   },
   "scripts": {
     "dev": "nodemon -r @std/esm server/server.js",
+    "device-client": "DEBUG=lib:delonghi:* nodemon -r @std/esm server/device-client.js",
     "build": "next build",
     "start": "NODE_ENV=production node -r @std/esm server/server.js"
   },

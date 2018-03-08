@@ -39,7 +39,7 @@ export class Delonghi {
           const buffer = rxtxBuffers.find(({type: bufferType, use: bufferUse}) => (type === bufferType && use === bufferUse))
 
           if (buffer) {
-            // console.log(`Setting ${buffer.name + '_hex'} to ${value}`)
+            console.log(`Setting ${buffer.name + '_hex'} to ${value}`)
             this.state[buffer.name + '_hex'] = value
           }
         })

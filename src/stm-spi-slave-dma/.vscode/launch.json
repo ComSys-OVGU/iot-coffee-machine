@@ -8,7 +8,9 @@
             "name": "PlatformIO Debugger",
             "target": "/Volumes/Coffee/iot-coffee-machine/src/stm-spi-slave-dma/.pioenvs/disco_f407vg/firmware.elf",
             "gdbpath": "/Users/fabian/.platformio/penv/bin/piodebuggdb",
-            "autorun": [ "source .pioinit" ]
+            "autorun": [ "source .pioinit" ],
+            "preLaunchTask": "PlatformIO: Pre-Debug",
+            "internalConsoleOptions": "openOnSessionStart"
         }
     ]
 }

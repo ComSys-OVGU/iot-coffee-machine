@@ -41,3 +41,5 @@ Temporary Items
 
 # End of https://www.gitignore.io/api/osx,visualstudiocode
 .vscode/launch.json
+.vscode/*.db
+.vscode/.browse.c_cpp.db*

@@ -1,6 +1,6 @@
 const singlePacketRegEx = String.raw`(?:[\s->]+([^\=]+)\=([^ ]+))`
 const regs = {
-  packets: new RegExp(String.raw`^\[Delonghi\]${singlePacketRegEx.repeat(6)}$`)
+  packets: new RegExp(String.raw`^\[Delonghi\]${singlePacketRegEx.repeat(6)}?$`)
 }
 
 const unzip = (arr) => arr.reduce((obj, val, i) => {
