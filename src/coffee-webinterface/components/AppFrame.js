@@ -8,7 +8,7 @@ import Toolbar from 'material-ui/Toolbar'
 import List from 'material-ui/List'
 import Typography from 'material-ui/Typography'
 import Divider from 'material-ui/Divider'
-import Reboot from 'material-ui/Reboot'
+import CssBaseline from 'material-ui/CssBaseline'
 
 import withRoot from './withRoot'
 import { menuItems } from './Drawer/AppDrawerMenu'
@@ -64,22 +64,10 @@ class PermanentDrawer extends React.Component {
 
   render () {
     const { classes, children, title } = this.props
-    const drawer = (
-      <Drawer
-        type='permanent'
-        classes={{
-          paper: classes.drawerPaper
-        }}
-      >
-        <div className={classes.drawerHeader} />
-        <Divider />
-        <List>{menuItems}</List>
-        <Divider />
-      </Drawer>
-    )
+
     return (
       <div className={classes.root}>
-        <Reboot />
+        <CssBaseline />
         <div className={classes.appFrame}>
           <AppBar className={classNames(classes.appBar, classes[`appBar-left`])}>
             <Toolbar>
@@ -89,7 +77,18 @@ class PermanentDrawer extends React.Component {
               <DevTools />
             </Toolbar>
           </AppBar>
-          {drawer}
+          <Drawer
+            variant='permanent'
+            anchor='left'
+            classes={{
+              paper: classes.drawerPaper
+            }}
+          >
+            <div className={classes.drawerHeader} />
+            <Divider />
+            <List>{menuItems}</List>
+            <Divider />
+          </Drawer>
           <main className={classes.content}>
             {children}
           </main>

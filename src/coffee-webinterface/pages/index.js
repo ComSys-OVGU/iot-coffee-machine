@@ -43,7 +43,7 @@ class Index extends React.Component {
         <Typography type='display1' gutterBottom>
           Coffee Webinterface
         </Typography>
-        <Link href='/control'>
+        <Link href='/order'>
           <a>Enter here</a>
         </Link>
       </div>

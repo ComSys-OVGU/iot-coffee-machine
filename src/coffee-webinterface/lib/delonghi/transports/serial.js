@@ -1,12 +1,14 @@
 import debug from 'debug'
 import SerialPort from 'serialport'
 import fs from 'fs'
+import { DelonghiTransport } from './transport'
 
 const log = debug('lib:delonghi:transports:serial')
 const Regex = SerialPort.parsers.Regex
 
-class DelonghiSerial {
+class DelonghiSerial extends DelonghiTransport {
   constructor ({port = '/dev/cu.usbserial-AM021CBT', baudRate = 921600}) {
+    super()
     this.state = {
       connected: false,
       serialConfig: {
@@ -74,6 +76,10 @@ class DelonghiSerial {
   sendData (data, ...args) {
     log(`txdata: '${data}'`)
     this.serialConnection.write(data, ...args)
+  }
+
+  getIsConnected () {
+    return this.state.connected
   }
 }
 

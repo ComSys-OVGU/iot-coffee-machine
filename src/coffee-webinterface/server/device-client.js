@@ -1,13 +1,14 @@
 import Koa from 'koa'
 import Router from 'koa-router'
 import IO from 'koa-socket'
+import cors from '@koa/cors'
 
 import { DelonghiSerial } from '../lib/delonghi/transports/node'
 import { DelonghiStdInOut } from '../lib/delonghi/transports/stdinout'
 
 import { DelonghiV1 } from '../lib/delonghi/protocols/delonghi_v1'
 
-const port = parseInt(process.env.PORT, 10) || 3000
+const port = parseInt(process.env.PORT, 10) || 3001
 const dev = process.env.NODE_ENV !== 'production'
 const io = new IO()
 const delonghi = new DelonghiSerial('/dev/cu.usbserial-AM021CBT')
@@ -36,7 +37,24 @@ router.get('/isReady', async ctx => {
     ready: await delonghiProtocol.getIsReady()
   }
 })
-
+router.post('/reset', async ctx => {
+  await delonghiProtocol.sendSerial('r')
+  ctx.body = {
+    reset: true
+  }
+})
+router.post('/fakeOff', async ctx => {
+  await delonghiProtocol.sendSerial('b0B00020047010400AEt1t2')
+  ctx.body = {
+    fakeOff: true
+  }
+})
+router.post('/resetFilters', async ctx => {
+  await delonghiProtocol.sendSerial('T1T2')
+  ctx.body = {
+    resetFilters: true
+  }
+})
 router.post('/taste/:taste', async ctx => {
   const {
     taste
@@ -82,6 +100,7 @@ router.post('/brew/:beverage/:taste?', async ctx => {
 //   server.io.broadcast('data', data)
 // })
 
+server.use(cors())
 server.use(router.routes())
 server.use(router.allowedMethods())
 server.listen(port, (err) => {

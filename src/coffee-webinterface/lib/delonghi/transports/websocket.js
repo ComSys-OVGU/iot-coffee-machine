@@ -1,7 +1,9 @@
 import io from 'socket.io-client'
+import { DelonghiTransport } from './transport'
 
-class DelonghiWebsocket {
+class DelonghiWebsocket extends DelonghiTransport {
   constructor (address = '') {
+    super()
     this.socket = io(address)
   }
 

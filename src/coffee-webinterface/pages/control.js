@@ -45,7 +45,7 @@ class DelonghiButton extends React.Component {
 
     return (
       <Grid item xs>
-        <Button raised color={active ? 'accent' : 'primary'} onClick={pressButton}>
+        <Button raised="true" color={active ? 'accent' : 'primary'} onClick={pressButton}>
           {title}
         </Button>
       </Grid>

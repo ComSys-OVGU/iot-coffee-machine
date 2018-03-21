@@ -51,11 +51,37 @@ export class DelonghiProtocol {
   async getCapabilities () {
     return {
       beverages: [
-        { name: 'one_short_coffee' },
-        { name: 'two_short_coffees' },
-        { name: 'one_long_coffee' },
-        { name: 'two_long_coffees' },
-        { name: 'hot_water' }
+        { 
+          name: 'one_coffee',
+          tastes: [
+            { name: 'extra_mild', weight: 7.3 },
+            { name: 'mild', weight: 9.2 },
+            { name: 'standard', weight: 10.3 },
+            { name: 'strong', weight: 10.5 },
+            { name: 'extra_strong', weight: 11.0 },
+            { name: 'pre_ground', weight: 0 }
+          ],
+          sizes: ['short', 'long']
+        },
+        { 
+          name: 'two_coffees',
+          tastes: [
+            { name: 'extra_mild', weight: 12.2 },
+            { name: 'mild', weight: 12.3 },
+            { name: 'standard', weight: 12.5 },
+            { name: 'strong', weight: 12.7 },
+            { name: 'extra_strong', weight: 13.0 },
+            { name: 'pre_ground', weight: 0 }
+          ],
+          sizes: ['short', 'long']
+        },
+        { 
+          name: 'hot_water', 
+          tastes: [
+            { name: 'standard', weight: 0 }
+          ],
+          sizes: ['']
+        }
       ],
       tastes: [
         { name: 'extra_mild' },
@@ -165,6 +191,13 @@ export class DelonghiProtocol {
   }
 
   async getIsReady () {
+    if (!this.transport.getIsConnected()) {
+      return {
+        ready: false,
+        transportConnected: false
+      }
+    }
+
     const {
       decoded: {
         pbRx,
@@ -180,11 +213,11 @@ export class DelonghiProtocol {
     ]
 
     const invalidSensorValues = sensorValues.filter((val) => !val.valid)
-    
     return {
       ready: (mode == this.protocol.enums.pb_mode.ready) && invalidSensorValues.length === 0,
       invalidSensorValues,
-      mode
+      mode,
+      transportConnected: true
     }
   }
 
@@ -208,6 +241,11 @@ export class DelonghiProtocol {
   }
 
   async getCurrentState () {
+    if (!this.transport.getIsConnected()) {
+      return {
+        ready: await this.getIsReady()
+      }
+    }
     return new Promise(async (resolve, reject) => {
       // reject after 10s if not successfully resolved
       const timeout = setTimeout(() => {
