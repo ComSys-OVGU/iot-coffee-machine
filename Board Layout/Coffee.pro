@@ -1,4 +1,4 @@
-update=12/21/17 14:27:41
+update=03/15/18 12:51:30
 version=1
 last_client=kicad
 [pcbnew]
@@ -27,7 +27,7 @@ NetIExt=net
 version=1
 [eeschema]
 version=1
-LibDir=../../../../Desktop;../../../../Desktop;../../../../Desktop/DE-HW-Hardware-master
+LibDir=../pretty-kicad-libs-master;../pretty-kicad-libs-master
 [eeschema/libraries]
 LibName1=Coffee-rescue
 LibName2=power
@@ -64,3 +64,6 @@ LibName32=contrib
 LibName33=valves
 LibName34=analog_devices
 LibName35=stm32
+LibName36=C:/Users/param/Desktop/avr/libs/JTAG10
+LibName37=C:/Users/param/Desktop/pretty-kicad-libs-master/pretty-kicad-libs-master/pkl_conn
+LibName38=C:/Users/param/Desktop/dc-dc
